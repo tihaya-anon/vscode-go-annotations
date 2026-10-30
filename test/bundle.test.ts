@@ -12,8 +12,18 @@ const bundle = path.join(root, 'dist/extension.cjs');
 
 type Painted = Map<string, Array<{ start: number[]; end: number[] }>>;
 
-function stubVscode(text: string, painted: Painted) {
+interface Workspace {
+  trusted: boolean;
+  folders: string[];
+  logs: string[];
+  config?: Record<string, unknown>;
+  // Options of each decoration type created, in order.
+  types?: Array<{ color?: { id: string }; fontWeight?: string; fontStyle?: string }>;
+}
+
+function stubVscode(text: string, painted: Painted, ws: Workspace) {
   const noop = () => ({ dispose() {} });
+  const log = (line: string) => ws.logs.push(line);
   const document = { languageId: 'go', version: 1, uri: { toString: () => 'file:///sample.go' }, getText: () => text };
   const editor = {
     document,
@@ -40,37 +50,109 @@ function stubVscode(text: string, painted: Painted) {
     window: {
       visibleTextEditors: [editor],
       onDidChangeVisibleTextEditors: noop,
-      createTextEditorDecorationType: (opts: { color: { id: string } }) => ({ id: opts.color.id, dispose() {} }),
+      createTextEditorDecorationType: (opts: { color?: { id: string } }) => {
+        ws.types?.push(opts);
+        return { id: opts.color?.id ?? 'uncoloured', dispose() {} };
+      },
+      createOutputChannel: () => ({ info: log, warn: log, show() {}, dispose() {} }),
     },
+    commands: { registerCommand: noop },
     workspace: {
+      isTrusted: ws.trusted,
+      workspaceFolders: ws.folders.map((fsPath) => ({ uri: { fsPath } })),
+      createFileSystemWatcher: () => ({ onDidCreate: noop, onDidChange: noop, dispose() {} }),
+      onDidGrantWorkspaceTrust: noop,
+      onDidChangeWorkspaceFolders: noop,
       onDidChangeTextDocument: noop,
       onDidCloseTextDocument: noop,
       onDidChangeConfiguration: noop,
-      getConfiguration: () => ({ get: (_key: string, fallback: unknown) => fallback }),
+      getConfiguration: () => ({
+        get: (key: string, fallback: unknown) => ws.config?.[key] ?? fallback,
+      }),
     },
   };
 }
 
-test('dist/extension.cjs activates and paints', { skip: !existsSync(bundle) && 'run npm run build first' }, async () => {
+async function activate(ws: Workspace, globalState = new Map<string, unknown>()): Promise<Painted> {
   const text = readFileSync(path.join(root, 'test/fixtures/sample.go'), 'utf8');
   const painted: Painted = new Map();
-  const vscode = stubVscode(text, painted);
+  const vscode = stubVscode(text, painted, ws);
 
   // Module._load is the hook require() goes through; answer `vscode` with the stub.
   const loader = Module as unknown as { _load: (request: string, ...rest: unknown[]) => unknown };
   const original = loader._load;
   loader._load = (request, ...rest) => (request === 'vscode' ? vscode : original(request, ...rest));
   try {
-    const extension = createRequire(import.meta.url)(bundle) as {
+    // A fresh load each time: the bundle binds the stub it was first required with.
+    const require = createRequire(import.meta.url);
+    delete require.cache[bundle];
+    const extension = require(bundle) as {
       activate: (context: unknown) => Promise<void>;
     };
     const subscriptions: unknown[] = [];
-    await extension.activate({ extensionUri: { fsPath: root }, subscriptions });
+    const context = {
+      extensionUri: { fsPath: root },
+      subscriptions,
+      globalState: {
+        get: (key: string) => globalState.get(key),
+        update: async (key: string, value: unknown) => void globalState.set(key, value),
+      },
+    };
+    await extension.activate(context);
   } finally {
     loader._load = original;
   }
+  return painted;
+}
 
+// Markers load after activate() returns; wait for the log line that says which set won.
+async function markersLoaded(ws: Workspace): Promise<string> {
+  for (let i = 0; i < 200; i++) {
+    const line = ws.logs.find((l) => l.startsWith('Using '));
+    if (line) return line;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error(`markers never loaded: ${ws.logs.join('; ')}`);
+}
+
+const built = !existsSync(bundle) && 'run npm run build first';
+
+test('dist/extension.cjs activates and paints', { skip: built }, async () => {
+  // Colours on, so that every decoration type is told apart by its theme colour id.
+  const ws = { trusted: false, folders: [root], logs: [], config: { 'comments.useColors': true } };
+  const painted = await activate(ws);
   assert.equal(painted.get('goAnnotations.structTagKey')?.length, 4);
-  assert.equal(painted.get('goAnnotations.docComment')?.length, 8);
-  assert.equal(painted.get('goAnnotations.markerName')?.length, 7);
+  assert.equal(painted.get('goAnnotations.docCommentName')?.length, 14);
+  assert.equal(painted.get('goAnnotations.markerName')?.length, 10);
+  // The built-in registry is there from the first paint: `scope` is split off its marker.
+  assert.equal(painted.get('goAnnotations.markerArgument')?.length, 7);
+  // An untrusted workspace never runs controller-gen.
+  assert.match(await markersLoaded(ws), /^Using built-in markers/);
+});
+
+test('by default, comment decorations keep the comment colour', { skip: built }, async () => {
+  const ws: Workspace = { trusted: false, folders: [root], logs: [], types: [] };
+  await activate(ws);
+  const colours = ws.types!.map((t) => t.color?.id).filter(Boolean);
+  assert.deepEqual(colours.sort(), [
+    'goAnnotations.structTagKey',
+    'goAnnotations.structTagName',
+    'goAnnotations.structTagOption',
+  ]);
+  assert.ok(ws.types!.some((t) => !t.color && t.fontWeight === 'bold'));
+});
+
+const playground = path.join(root, 'playground');
+const noControllerGen =
+  !existsSync(path.join(playground, 'bin/controller-gen')) && 'no playground/bin/controller-gen';
+
+test('a trusted workspace uses its bin/controller-gen and caches by version', { skip: built || noControllerGen }, async () => {
+  const globalState = new Map<string, unknown>();
+  const ws = { trusted: true, folders: [playground], logs: [] };
+  await activate(ws, globalState);
+  assert.match(await markersLoaded(ws), /^Using \d+ markers from .*playground\/bin\/controller-gen \(v/);
+  assert.deepEqual(
+    [...globalState.keys()].map((k) => k.replace(/v[\d.]+$/, 'vX')),
+    ['controllerGenHelp/vX'],
+  );
 });

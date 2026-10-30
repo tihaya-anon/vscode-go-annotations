@@ -19,11 +19,25 @@
   "extensionKind": [
     "workspace"
   ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "In an untrusted workspace controller-gen is not run, so marker names are split using the built-in marker list.",
+      "restrictedConfigurations": [
+        "goAnnotations.markers.controllerGenPath"
+      ]
+    }
+  },
   "main": "./dist/extension.cjs",
   "contributes": {
     "configuration": {
       "title": "Go Annotations",
       "properties": {
+        "goAnnotations.comments.useColors": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Colour doc comment names and markers with the `goAnnotations.*` theme colours. Off by default: they keep the theme's comment colour and are told apart by weight and style only (names bold, marker arguments italic)."
+        },
         "goAnnotations.structTags.enabled": {
           "type": "boolean",
           "default": true,
@@ -32,21 +46,18 @@
         "goAnnotations.docComments.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Highlight doc comments attached to declarations, struct fields and interface methods."
-        },
-        "goAnnotations.docComments.fontStyle": {
-          "type": "string",
-          "enum": [
-            "normal",
-            "italic"
-          ],
-          "default": "italic",
-          "description": "Font style for doc comments. Decorations cannot take a font style from the theme, so it is a setting."
+          "description": "Embolden the documented name (the struct, field, function, ... it is about) inside doc comments."
         },
         "goAnnotations.markers.enabled": {
           "type": "boolean",
           "default": true,
           "description": "Highlight controller-gen / Kubebuilder marker comments such as // +kubebuilder:validation:Minimum=1."
+        },
+        "goAnnotations.markers.controllerGenPath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine-overridable",
+          "markdownDescription": "Path to the `controller-gen` binary whose markers are used to tell a marker name from its first argument. Relative paths resolve against each workspace folder. When empty, `bin/controller-gen` in a workspace folder (where Kubebuilder's Makefile installs it) and then `controller-gen` on `PATH` are tried; failing those, a built-in copy of controller-gen's markers is used."
         }
       }
     },
@@ -82,8 +93,8 @@
         }
       },
       {
-        "id": "goAnnotations.docComment",
-        "description": "Doc comment of a declaration, field or interface method.",
+        "id": "goAnnotations.docCommentName",
+        "description": "Documented name inside a doc comment, e.g. Dataset in // Dataset is ... (used when goAnnotations.comments.useColors is on).",
         "defaults": {
           "dark": "#629755",
           "light": "#3D7A2E",
@@ -93,7 +104,7 @@
       },
       {
         "id": "goAnnotations.markerPrefix",
-        "description": "The + that opens a marker comment.",
+        "description": "The + that opens a marker comment (used when goAnnotations.comments.useColors is on).",
         "defaults": {
           "dark": "#BBB529",
           "light": "#808000",
@@ -103,7 +114,7 @@
       },
       {
         "id": "goAnnotations.markerName",
-        "description": "Marker name, e.g. kubebuilder:validation:Minimum.",
+        "description": "Marker name, e.g. kubebuilder:validation:Minimum (used when goAnnotations.comments.useColors is on).",
         "defaults": {
           "dark": "#BBB529",
           "light": "#808000",
@@ -113,7 +124,7 @@
       },
       {
         "id": "goAnnotations.markerArgument",
-        "description": "Named marker argument, e.g. type in +kubebuilder:printcolumn:type=string.",
+        "description": "Named marker argument, e.g. type in +kubebuilder:printcolumn:type=string (used when goAnnotations.comments.useColors is on).",
         "defaults": {
           "dark": "#9CDCFE",
           "light": "#0070C1",
@@ -123,13 +134,20 @@
       },
       {
         "id": "goAnnotations.markerValue",
-        "description": "Marker argument value.",
+        "description": "Marker argument value (used when goAnnotations.comments.useColors is on).",
         "defaults": {
           "dark": "#CE9178",
           "light": "#A31515",
           "highContrast": "#CE9178",
           "highContrastLight": "#A31515"
         }
+      }
+    ],
+    "commands": [
+      {
+        "command": "goAnnotations.showLog",
+        "title": "Show Log",
+        "category": "Go Annotations"
       }
     ]
   },

@@ -3,11 +3,15 @@ import { readFileSync, readdirSync } from 'node:fs';
 import * as path from 'node:path';
 import { before, describe, test } from 'node:test';
 import type { Parser } from 'web-tree-sitter';
-import { analyze, type Span, type SpanKind } from '../src/analyze.ts';
+import { analyze, type AnalyzeOptions, type Span, type SpanKind } from '../src/analyze.ts';
 import { createGoParser } from '../src/goParser.ts';
+import { MarkerRegistry } from '../src/markers.ts';
 
 const root = path.resolve(import.meta.dirname, '..');
-const ALL = { structTags: true, docComments: true, markers: true };
+const builtinPath = path.join(root, 'src/controller-gen-markers.json');
+const builtin = JSON.parse(readFileSync(builtinPath, 'utf8'));
+const registry = MarkerRegistry.fromHelp(builtin.categories);
+const ALL: AnalyzeOptions = { structTags: true, docComments: true, markers: true, registry };
 
 let parser: Parser;
 before(async () => {
@@ -18,7 +22,7 @@ before(async () => {
 });
 
 // Each span as "kind text", so expectations read like the source they describe.
-function render(source: string, options = ALL): string[] {
+function render(source: string, options: AnalyzeOptions = ALL): string[] {
   const tree = parser.parse(source)!;
   const lines = source.split('\n');
   const out = analyze(tree.rootNode, options).map((s: Span) => {
@@ -46,20 +50,29 @@ describe('sample.go', () => {
     assert.deepEqual(only(spans, 'structTagOption'), ['omitempty', 'string']);
   });
 
-  test('doc comments are the adjacent group above a declaration, minus markers and directives', () => {
-    assert.deepEqual(only(render(source), 'docComment'), [
-      '// Package sample 覆盖扩展要识别的每一种写法。',
-      '// Spec 是规格：doc comment, then markers in the same group.',
-      '// Name 名字。',
-      '// Quoted uses an interpreted-string tag.',
-      '// Run has a directive above its doc.',
-      '// Grouped is documented inside a type group.',
-      '// Shape has documented interface methods.',
-      '// Area 返回面积。',
+  test('doc comments: whole-word mentions of the declared name, in the adjacent group only', () => {
+    assert.deepEqual(only(render(source), 'docCommentName'), [
+      'sample',
+      'Spec',
+      'Name',
+      'Quoted',
+      'Run',
+      'Grouped',
+      'Shape',
+      'Area',
+      'Area',
+      // Embedded *Grouped is named after its type; `X, Y int` declares both. NotX and X2 are
+      // other words.
+      'Grouped',
+      'X',
+      'Y',
+      // A block comment, across its two lines.
+      'Block',
+      'Block',
     ]);
   });
 
-  test('markers: anonymous values stay in the name, multi-argument markers expose keys', () => {
+  test('markers: the registry splits name from first argument', () => {
     const spans = render(source);
     assert.deepEqual(only(spans, 'markerName'), [
       'kubebuilder:object:generate',
@@ -67,8 +80,11 @@ describe('sample.go', () => {
       'kubebuilder:object:root',
       'kubebuilder:printcolumn',
       'kubebuilder:rbac',
+      'kubebuilder:resource',
+      'kubebuilder:subresource:status',
       'optional',
       'kubebuilder:validation:MinLength',
+      'custom:tool:key',
     ]);
     assert.deepEqual(only(spans, 'markerArgument'), [
       'name',
@@ -77,33 +93,47 @@ describe('sample.go', () => {
       'groups',
       'resources',
       'verbs',
+      'scope',
     ]);
     assert.ok(
       only(spans, 'markerValue').includes('`.status.conditions[?(@.type=="Ready")].status`'),
       'a backquoted value keeps its inner = and quotes',
     );
-    assert.equal(only(spans, 'markerPrefix').length, 7);
+    assert.equal(only(spans, 'markerPrefix').length, 10);
+  });
+
+  test('markers: without a registry, only multi-argument markers expose a first key', () => {
+    const spans = render(source, { ...ALL, registry: undefined });
+    assert.ok(only(spans, 'markerName').includes('kubebuilder:resource:scope'));
+    assert.ok(only(spans, 'markerName').includes('kubebuilder:printcolumn'));
+    assert.ok(!only(spans, 'markerArgument').includes('scope'));
   });
 
   test('columns are UTF-16, matching vscode.Position', () => {
-    const comment = '// Area 返回面积。';
-    const row = source.split('\n').findIndex((l) => l === `\t${comment}`);
+    const line = '\t// Area 返回面积，即 Area。';
+    const row = source.split('\n').indexOf(line);
     const tree = parser.parse(source)!;
-    const area = analyze(tree.rootNode, ALL).find(
-      (s) => s.kind === 'docComment' && s.start.row === row,
+    const areas = analyze(tree.rootNode, ALL).filter(
+      (s) => s.kind === 'docCommentName' && s.start.row === row,
     );
     tree.delete();
-    // 13 UTF-16 units after the tab; the same text is 23 bytes in UTF-8.
-    assert.equal(comment.length, 13);
-    assert.deepEqual(area && [area.start.column, area.end.column], [1, 14]);
+    // The second Area follows 6 CJK characters: 6 UTF-16 units, but 18 bytes in UTF-8.
+    assert.equal(line.indexOf('Area', 5), 16);
+    assert.deepEqual(
+      areas.map((s) => [s.start.column, s.end.column]),
+      [
+        [4, 8],
+        [16, 20],
+      ],
+    );
   });
 
   test('each feature can be switched off', () => {
     const none = { structTags: false, docComments: false, markers: false };
     assert.deepEqual(render(source, none), []);
-    // With markers off, a marker line inside a doc group is plain doc text again.
-    assert.ok(
-      only(render(source, { ...ALL, markers: false }), 'docComment').includes('// +optional'),
+    assert.deepEqual(
+      render(source, { ...ALL, markers: false }).filter((s) => s.startsWith('marker')),
+      [],
     );
   });
 });

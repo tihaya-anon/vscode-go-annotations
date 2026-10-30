@@ -47,7 +47,13 @@ Costs accepted with B:
 
 - Colours are contributed theme colours with light/dark/high-contrast defaults rather than theme
   scopes; themes do not know about them, users override via `workbench.colorCustomizations`.
-- Font style cannot come from a theme colour, so doc-comment italics is a setting.
+- A decoration cannot take its colour from the theme's comment token colour (or derive a
+  bolder/more saturated variant of it), and a contributed colour must have a default. So
+  decorations inside comments (doc names, markers) set no colour by default and differ by weight
+  and style only: names bold, marker arguments italic. The owner's verdict on coloured comment
+  parts was that they read as code. `goAnnotations.comments.useColors` brings the colours back.
+  Struct tags are code and keep colours. A future option is reading the active theme's JSON for
+  the comment colour and deriving variants from it; fragile (theme includes, semantic overrides).
 - The whole document is reparsed on each (debounced) change. Fine for normal files; incremental
   parsing with `tree.edit()` is a later optimisation if profiling asks for it.
 
@@ -57,21 +63,28 @@ Costs accepted with B:
   `src/analyze.ts`) with no blank line between, stopping at a comment that shares its first line
   with earlier code (that is a trailing comment). Directive lines (go/doc's
   `^//(line |extern |export |[a-z0-9]+:[a-z0-9])`) are excluded, matching what go/doc drops.
+  Only the declared name is highlighted, wherever it appears in the group as a whole,
+  case-sensitive word (`NotX` does not match field `X`). The name is the spec's for a single
+  `type`/`const`/`var` declaration, every name for `X, Y int`, the type's for an embedded field
+  (`*pkg.T[int]` -> `T`); a parenthesised group's own doc has no name.
 - **Struct tag**: `reflect.StructTag` syntax, `key:"value"` pairs; the value split on `,` into a
   name and options (encoding/json convention). Raw and interpreted (`"json:\"x\""`) tags both work;
   multi-line tags are skipped.
 - **Marker**: a line comment `// +name...` where a name character follows `+`. Marker lines are
-  markers even inside a doc group, so spans never overlap.
+  markers even inside a doc group, so spans never overlap. `// +build ...` (the pre-1.17 build
+  constraint) has the marker shape and is excluded.
 
-### Known limitation: marker name vs argument
+### Marker name vs argument
 
 controller-gen syntax `+a:b:c=1` is either marker `a:b:c` with an anonymous value or marker `a:b`
-with named argument `c`. Lexically they are identical. The analyzer currently treats the last path
-segment as an argument key only when two or more `key=value` arguments follow (printcolumn, rbac).
-`+kubebuilder:resource:scope=Cluster` therefore shows `scope` as part of the name. The marker
-registry (next phase) resolves this properly.
+with named argument `c`. Lexically they are identical. With the registry the analyzer does what
+controller-tools does (`splitMarker` + `tryAnonLookup` in `pkg/markers`): look up everything before
+the first `=`, and if that is not a marker, drop the last `:`-segment and look that up. The target
+(package/type/field) is ignored for the split. A marker the registry does not know (Kubebuilder's
+`+kubebuilder:scaffold:*`, other generators) falls back to a lexical guess: the last segment is an
+argument key only when two or more `key=value` arguments follow (printcolumn, rbac style).
 
-## Next phase: marker registry
+## Marker registry
 
 controller-gen describes every marker it knows, with its target and arguments:
 
@@ -83,14 +96,30 @@ $ bin/controller-gen crd -ww
 	[priority=<int>]        indicates how important ...
 ```
 
-Parsing that output for the `crd`, `rbac`, `webhook` and `object` generators (cached per
-controller-gen version) gives:
+`-wwww` prints the same as JSON (one array of categories per generator), which is what is parsed;
+the text form is never scraped. `rbac` refuses to print help without `rbac:roleName=<any>`.
+Marker order in the output varies between runs because controller-gen walks Go maps.
 
-- exact name/argument splitting for highlighting;
+Where the registry comes from:
+
+1. `src/controller-gen-markers.json`, captured from v0.19.0 by `scripts/capture-markers.sh` and
+   bundled, so highlighting is exact from the first paint and without controller-gen installed.
+2. Once activated, and only in a trusted workspace (running a workspace binary is code
+   execution), the first controller-gen that answers `--version` among
+   `goAnnotations.markers.controllerGenPath`, `<folder>/bin/controller-gen` and `PATH`. Its help
+   for `crd`, `rbac`, `webhook` and `object` is cached in `globalState` per release version
+   (`(devel)` builds are not cached), and replaces the built-in set. It is reloaded when
+   `bin/controller-gen*` appears or changes, when trust is granted, or when the setting changes.
+
+Uses:
+
+- exact name/argument splitting for highlighting (done);
 - hover documentation;
 - completion after `// +`;
 - diagnostics: unknown marker, missing required argument, wrong target (a `type` marker on a
-  field), using the syntax tree the analyzer already has.
+  field), using the syntax tree the analyzer already has. `+kubebuilder:scaffold:*` (Kubebuilder
+  CLI insertion points) and other generators' markers are not in the registry, so "unknown" must
+  be limited to the namespaces the registry covers (`kubebuilder:validation:*` etc.).
 
 `extensionKind: ["workspace"]` is set so that, in a dev container, the extension runs where
 `controller-gen` is.

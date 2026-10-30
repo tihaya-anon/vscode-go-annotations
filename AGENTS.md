@@ -24,11 +24,16 @@ and docs in this repository are in English.
 ```text
 src/analyze.ts        pure: tree-sitter syntax tree -> highlight spans (no vscode import)
 src/goParser.ts       loads web-tree-sitter and the Go grammar .wasm
-src/extension.ts      vscode glue: decoration types, debounce, per-document cache
+src/markers.ts        pure: marker registry parsed from `controller-gen <gen> -wwww` JSON
+src/controllerGen.ts  runs a controller-gen binary for its version and marker help
+src/controller-gen-markers.json  built-in registry, used until/unless a workspace one loads
+src/extension.ts      vscode glue: decoration types, debounce, per-document cache, registry loading
 test/analyze.test.ts  analyzer against test/fixtures/sample.go and the playground API types
+test/markers.test.ts  registry parsing and name splitting; live check against playground/bin
 test/bundle.test.ts   require()s dist/extension.cjs with a stub vscode module and activates it
 scripts/build.mjs     esbuild bundle + copies both .wasm files into dist/
 scripts/make-playground.sh  clones k8s-ai-platform into playground/ (gitignored)
+scripts/capture-markers.sh  regenerates src/controller-gen-markers.json from a controller-gen
 playground/           throwaway Kubebuilder project the F5 launch config opens
 ```
 
@@ -40,6 +45,7 @@ project, not this one; do not follow them here, and never commit changes inside 
 ```bash
 npm install
 scripts/make-playground.sh   # once, or to refresh the playground
+(cd playground && make controller-gen)  # optional: enables the live controller-gen tests
 npm run check                # typecheck + tests + build; run before calling a change done
 ```
 
