@@ -11,7 +11,7 @@ Done:
   per document, cache keyed by document version, settings to switch each feature off and to
   choose doc-comment font style.
 - Tests: analyzer cases over `test/fixtures/sample.go` (including UTF-16 column checks with Chinese
-  text), a smoke test over `playground/api/v1alpha1`, and a bundle test that `require()`s
+  text), a smoke test over a real Kubebuilder project's API types, and a bundle test that `require()`s
   `dist/extension.cjs` with a stub `vscode` and activates it. `npm run check` passes.
 - Bug the bundle test caught: web-tree-sitter's ESM build calls `createRequire(import.meta.url)`,
   undefined in a CommonJS bundle. Fixed with an esbuild `banner` + `define` in `scripts/build.mjs`.
@@ -19,7 +19,7 @@ Done:
 Not yet verified:
 
 - **Never run inside a real VS Code window.** Everything above is tested in Node only. First thing
-  to do: F5, open `playground/api/v1alpha1/dataset_types.go`, and check the colours appear over
+  to do: F5, open a Kubebuilder `*_types.go`, and check the colours appear over
   gopls semantic highlighting, survive edits, and follow light/dark theme switches.
 - Default colours are a first guess (GoLand Darcula-like for docs and markers); tune them by eye.
 
@@ -38,16 +38,16 @@ Done:
   workspaces are declared `limited` and never run it. See
   [design.md](design.md#marker-registry).
 - Fixed: `// +build ...` build constraints were highlighted as markers.
-- Tests: registry parsing and splitting, a live comparison of `playground/bin/controller-gen`
+- Tests: registry parsing and splitting, a live comparison of a real controller-gen's
   output with the built-in copy, and bundle tests for both the untrusted (built-in) and trusted
   (`bin/controller-gen`, cached) paths. `npm run check` passes.
-- On the playground's own API types the registry changes no spans: they have no single-argument
+- On the Kubebuilder project used for trying it out, the registry changes no spans: they have no single-argument
   struct markers. The visible difference is in projects using `resource:scope=` and the like.
 
 Not yet verified:
 
 - Still never run in a real VS Code window (see phase 1). Add to that check: the *Go Annotations*
-  output channel should say `Using N markers from .../playground/bin/controller-gen (v0.19.0)`.
+  output channel should say `Using N markers from .../bin/controller-gen (v0.19.0)`.
 
 ## 2026-10-30 — phase 3: first look in VS Code
 
@@ -90,7 +90,7 @@ name, and the check warns only when a doc opens with neither name:
 - `analyze()` returns `{ spans, docIssues }`; `docStart` option; json names highlighted.
 - Warning `doc-start`; quick fixes replace a wrong-case name, or else insert the name in front
   (after the owner tried it on a verb-first doc). Setting `goAnnotations.docComments.checkStart`.
-- Zero warnings over the playground's Go files.
+- Zero warnings over a real Kubebuilder project's Go files.
 - The owner checked the warning and both kinds of quick fix in VS Code.
 
 ## 2026-10-30 — phase 6: marker completion and diagnostics
@@ -105,7 +105,7 @@ Done (see [design.md](design.md#where-a-marker-attaches)):
   `src/markerCompletion.ts`. Setting `goAnnotations.markers.diagnostics`.
 - Registry now includes the `applyconfiguration` generator (`kubebuilder:ac:*`), deduplicates
   markers shared between generators; the globalState cache key moved to `controllerGenHelp/v2/`.
-- Zero diagnostics over the playground's 52 markers. `test/fixtures/sample.go` has a real one:
+- Zero diagnostics over a real Kubebuilder project's 52 markers. `test/fixtures/sample.go` has a real one:
   its `+kubebuilder:rbac` sits in a type's doc, which controller-gen ignores.
 - Code formatted with prettier (`--print-width 100 --single-quote`) where new; there is no
   prettier config or dependency in the repo yet.
@@ -132,6 +132,13 @@ owner checked it in VS Code.
 Not done, needs the owner: the GitHub repository does not exist yet (README links and the
 Marketplace "Repository" link point at it); screenshots for the README; `vsce publish` with the
 owner's token.
+
+## 2026-10-30 — phase 9: no playground
+
+The repository goes public, so the playground (a clone of the owner's private Kubebuilder project,
+and the script that made it) is gone. The live controller-gen tests use `bin/controller-gen`
+(gitignored, `go install`ed, see AGENTS.md); the smoke test runs over `test/fixtures/`; F5 opens
+`test/fixtures/`.
 
 ## Next steps
 

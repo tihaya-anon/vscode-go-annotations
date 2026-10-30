@@ -324,15 +324,15 @@ test('marker diagnostics and completion', { skip: built }, async () => {
   assert.ok(printcolumn.command, 'argument names are offered next');
 });
 
-const playground = path.join(root, 'playground');
-const noControllerGen =
-  !existsSync(path.join(playground, 'bin/controller-gen')) && 'no playground/bin/controller-gen';
+// The repository itself as the workspace: like a Kubebuilder project, it keeps controller-gen in
+// bin/ when installed (see AGENTS.md).
+const noControllerGen = !existsSync(path.join(root, 'bin/controller-gen')) && 'no bin/controller-gen';
 
 test('a trusted workspace uses its bin/controller-gen and caches by version', { skip: built || noControllerGen }, async () => {
   const globalState = new Map<string, unknown>();
-  const ws = { trusted: true, folders: [playground], logs: [] };
+  const ws = { trusted: true, folders: [root], logs: [] };
   await activate(ws, globalState);
-  assert.match(await markersLoaded(ws), /^Using \d+ markers from .*playground\/bin\/controller-gen \(v/);
+  assert.match(await markersLoaded(ws), /^Using \d+ markers from .*\/bin\/controller-gen \(v/);
   assert.deepEqual(
     [...globalState.keys()].map((k) => k.replace(/v[\d.]+$/, 'vX')),
     ['controllerGenHelp/v2/vX'],

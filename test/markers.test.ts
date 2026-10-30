@@ -84,9 +84,9 @@ describe('parseMarkerHelp', () => {
 });
 
 describe('controller-gen', () => {
-  // playground/bin/controller-gen comes from `make controller-gen` in the playground.
-  const bin = path.join(root, 'playground/bin/controller-gen');
-  const skip = !existsSync(bin) && 'no playground/bin/controller-gen';
+  // bin/controller-gen is installed by hand; see AGENTS.md.
+  const bin = path.join(root, 'bin/controller-gen');
+  const skip = !existsSync(bin) && 'no bin/controller-gen';
 
   test('help from the binary matches the built-in copy of the same version', { skip }, async () => {
     // controller-gen walks Go maps, so the order of markers differs from run to run.

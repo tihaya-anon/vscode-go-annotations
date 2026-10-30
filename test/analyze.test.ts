@@ -210,22 +210,16 @@ describe('markers.go', () => {
   });
 });
 
-describe('playground', () => {
-  // A smoke test over real Kubebuilder output: every span must fall inside its line.
-  const dir = path.join(root, 'playground/api/v1alpha1');
-  let files: string[] = [];
-  try {
-    files = readdirSync(dir).filter((f) => f.endsWith('.go'));
-  } catch {
-    // playground/ is gitignored; scripts/make-playground.sh creates it.
-  }
+describe('fixtures', () => {
+  const dir = path.join(root, 'test/fixtures');
+  const files = readdirSync(dir).filter((f) => f.endsWith('.go'));
 
-  test('api/v1alpha1 spans stay within their lines', { skip: files.length === 0 }, () => {
+  test('every span stays within its line', () => {
     for (const file of files) {
       const source = readFileSync(path.join(dir, file), 'utf8');
       const lines = source.split('\n');
       const tree = parser.parse(source)!;
-      for (const s of analyze(tree.rootNode, ALL).spans) {
+      for (const s of analyze(tree.rootNode, { ...ALL, docStart: true }).spans) {
         assert.ok(s.end.column <= lines[s.end.row]!.length, `${file}:${s.end.row + 1}`);
         assert.ok(
           s.start.row < s.end.row || s.start.column < s.end.column,

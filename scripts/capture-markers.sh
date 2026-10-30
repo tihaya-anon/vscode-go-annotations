@@ -2,11 +2,11 @@
 # Regenerates src/controller-gen-markers.json, the marker registry used when no controller-gen is
 # found, from `controller-gen <generator> -wwww` (JSON help).
 #
-#   scripts/capture-markers.sh [path/to/controller-gen]   # default: playground/bin/controller-gen
+#   scripts/capture-markers.sh [path/to/controller-gen]   # default: bin/controller-gen
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-bin=${1:-playground/bin/controller-gen}
+bin=${1:-bin/controller-gen}
 out=src/controller-gen-markers.json
 version=$("$bin" --version | sed -n 's/^Version: //p')
 

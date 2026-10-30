@@ -11,8 +11,7 @@ A VS Code extension that adds JetBrains-style highlighting to Go on top of the o
 - doc comments of declarations, struct fields and interface methods, distinct from other comments;
 - controller-gen / Kubebuilder markers (`// +kubebuilder:validation:Minimum=1`).
 
-It was started from the `k8s-ai-platform` repository (`~/workspace/personal/k8s-ai-platform`),
-whose Kubebuilder API types are the real-world test input. Read [docs/design.md](docs/design.md)
+Read [docs/design.md](docs/design.md)
 for why it is built this way and [docs/progress.md](docs/progress.md) for where it stands and what
 comes next — start there when picking the work up.
 
@@ -31,28 +30,24 @@ src/markerDiagnostics.ts  pure: marker checks with controller-gen's severities
 src/controllerGen.ts  runs a controller-gen binary for its version and marker help
 src/controller-gen-markers.json  built-in registry, used until/unless a workspace one loads
 src/extension.ts      vscode glue: decoration types, debounce, per-document cache, registry loading
-test/analyze.test.ts  analyzer against test/fixtures/sample.go and the playground API types
-test/markers.test.ts  registry parsing and name splitting; live check against playground/bin
+test/analyze.test.ts  analyzer against test/fixtures/sample.go and markers.go
+test/markers.test.ts  registry parsing and name splitting; live check against bin/controller-gen
 test/markerHover.test.ts  hover text against the built-in registry
 test/markerCompletion.test.ts, test/markerDiagnostics.test.ts  likewise
 test/bundle.test.ts   require()s dist/extension.cjs with a stub vscode module and activates it
 scripts/build.mjs     esbuild bundle + copies both .wasm files into dist/
-scripts/make-playground.sh  clones k8s-ai-platform into playground/ (gitignored)
 scripts/capture-markers.sh  regenerates src/controller-gen-markers.json from a controller-gen
 scripts/make-icon.mjs resources/brand.svg -> resources/icon.png (npm run icon; PNG is committed)
 .vscodeignore         allow-list of what goes into the .vsix
-playground/           throwaway Kubebuilder project the F5 launch config opens
+bin/                  controller-gen for the live tests (gitignored, installed by hand)
 ```
-
-`playground/` is a clone of another repository. Its own `AGENTS.md` and docs describe that
-project, not this one; do not follow them here, and never commit changes inside it.
 
 ## Commands
 
 ```bash
 npm install
-scripts/make-playground.sh   # once, or to refresh the playground
-(cd playground && make controller-gen)  # optional: enables the live controller-gen tests
+# Optional: controller-gen in bin/, as Kubebuilder projects keep it, for the live tests
+GOBIN=$PWD/bin go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.19.0
 npm run check                # typecheck + tests + build; run before calling a change done
 npm run package              # check, minified build, then go-annotations-<version>.vsix
 ```
@@ -66,9 +61,10 @@ because its JS and `.wasm` must match. Record user-visible changes in `CHANGELOG
 analyzer tests need no build. `test/bundle.test.ts` tests the built bundle and is skipped when
 `dist/` is missing; `npm run check` builds before it tests, so it always runs there.
 
-In VS Code, F5 ("Run extension on playground") builds and opens `playground/` in an Extension
-Development Host with the other extensions still enabled, so the decorations are seen over gopls
-semantic tokens as a user would see them.
+In VS Code, F5 ("Run extension on fixtures") builds and opens `test/fixtures/` in an Extension
+Development Host. golang.go and the theme stay enabled so that the decorations are seen over gopls
+semantic tokens as a user would see them; for real-world input, open a Kubebuilder project from
+there.
 
 ## Conventions
 
@@ -76,7 +72,7 @@ semantic tokens as a user would see them.
 - Every analyzer behaviour gets a case in `test/fixtures/sample.go` (marker placement and validity:
   `test/fixtures/markers.go`) and an assertion in the tests. Assertions are written as the
   highlighted source text, not offsets. A claim about what controller-gen does is checked by
-  running it (a scratch module copying `playground/go.mod`), not only by reading its source.
+  running it on a probe file in a scratch Kubebuilder module, not only by reading its source.
 - The package is ESM (`"type": "module"`), sources import each other as `./x.ts`, and only erasable
   TypeScript syntax is allowed (`erasableSyntaxOnly`): no enums, namespaces or parameter
   properties, because Node runs the tests by stripping types.

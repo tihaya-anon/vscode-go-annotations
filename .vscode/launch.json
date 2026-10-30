@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Run extension on playground",
+      "name": "Run extension on fixtures",
       "type": "extensionHost",
       "request": "launch",
       // golang.go (gopls semantic tokens), the colour theme and remote-wsl must stay enabled: the
@@ -63,7 +63,7 @@
         "--disable-extension=wiidede.liquid-ray",
         "--disable-extension=yzane.markdown-pdf",
         "--disable-extension=yzhang.markdown-all-in-one",
-        "${workspaceFolder}/playground"
+        "${workspaceFolder}/test/fixtures"
       ],
       "outFiles": ["${workspaceFolder}/dist/**/*.cjs"],
       "preLaunchTask": "npm: build"
