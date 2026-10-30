@@ -1,0 +1,5 @@
+**
+!dist/extension.cjs
+!dist/*.wasm
+!package.json
+!README.md

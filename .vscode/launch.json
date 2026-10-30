@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run extension on playground",
+      "type": "extensionHost",
+      "request": "launch",
+      // Other extensions stay enabled on purpose: the point is to see these decorations over
+      // golang.go with gopls semantic tokens on.
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "${workspaceFolder}/playground"
+      ],
+      "outFiles": ["${workspaceFolder}/dist/**/*.cjs"],
+      "preLaunchTask": "npm: build"
+    }
+  ]
+}

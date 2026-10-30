@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.vsix
+# Recreated by scripts/make-playground.sh.
+playground/
+# Generated from AGENTS.md.
+CLAUDE.md

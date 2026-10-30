@@ -1,0 +1,21 @@
+{
+  "[json][jsonc]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/.jj": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "dist": true
+  },
+  "search.exclude": {
+    "playground": true,
+    "dist": true
+  },
+  "hide-files.files": []
+}

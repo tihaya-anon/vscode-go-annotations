@@ -1,0 +1,153 @@
+{
+  "name": "go-annotations",
+  "displayName": "Go Annotations",
+  "description": "Highlights Go struct tags, declaration doc comments and Kubebuilder markers, on top of gopls semantic highlighting.",
+  "version": "0.0.1",
+  "publisher": "tihaya-anon",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:go"
+  ],
+  "extensionKind": [
+    "workspace"
+  ],
+  "main": "./dist/extension.cjs",
+  "contributes": {
+    "configuration": {
+      "title": "Go Annotations",
+      "properties": {
+        "goAnnotations.structTags.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Highlight keys, names and options inside struct tags."
+        },
+        "goAnnotations.docComments.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Highlight doc comments attached to declarations, struct fields and interface methods."
+        },
+        "goAnnotations.docComments.fontStyle": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "italic"
+          ],
+          "default": "italic",
+          "description": "Font style for doc comments. Decorations cannot take a font style from the theme, so it is a setting."
+        },
+        "goAnnotations.markers.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Highlight controller-gen / Kubebuilder marker comments such as // +kubebuilder:validation:Minimum=1."
+        }
+      }
+    },
+    "colors": [
+      {
+        "id": "goAnnotations.structTagKey",
+        "description": "Struct tag key, e.g. json in json:\"name,omitempty\".",
+        "defaults": {
+          "dark": "#C586C0",
+          "light": "#AF00DB",
+          "highContrast": "#D7A2FF",
+          "highContrastLight": "#8700B5"
+        }
+      },
+      {
+        "id": "goAnnotations.structTagName",
+        "description": "Struct tag value name, e.g. name in json:\"name,omitempty\".",
+        "defaults": {
+          "dark": "#9CDCFE",
+          "light": "#0070C1",
+          "highContrast": "#9CDCFE",
+          "highContrastLight": "#0451A5"
+        }
+      },
+      {
+        "id": "goAnnotations.structTagOption",
+        "description": "Struct tag option, e.g. omitempty in json:\"name,omitempty\".",
+        "defaults": {
+          "dark": "#DCDCAA",
+          "light": "#795E26",
+          "highContrast": "#DCDCAA",
+          "highContrastLight": "#5E4A1E"
+        }
+      },
+      {
+        "id": "goAnnotations.docComment",
+        "description": "Doc comment of a declaration, field or interface method.",
+        "defaults": {
+          "dark": "#629755",
+          "light": "#3D7A2E",
+          "highContrast": "#7CC46B",
+          "highContrastLight": "#2E5C22"
+        }
+      },
+      {
+        "id": "goAnnotations.markerPrefix",
+        "description": "The + that opens a marker comment.",
+        "defaults": {
+          "dark": "#BBB529",
+          "light": "#808000",
+          "highContrast": "#E5DF3A",
+          "highContrastLight": "#5C5C00"
+        }
+      },
+      {
+        "id": "goAnnotations.markerName",
+        "description": "Marker name, e.g. kubebuilder:validation:Minimum.",
+        "defaults": {
+          "dark": "#BBB529",
+          "light": "#808000",
+          "highContrast": "#E5DF3A",
+          "highContrastLight": "#5C5C00"
+        }
+      },
+      {
+        "id": "goAnnotations.markerArgument",
+        "description": "Named marker argument, e.g. type in +kubebuilder:printcolumn:type=string.",
+        "defaults": {
+          "dark": "#9CDCFE",
+          "light": "#0070C1",
+          "highContrast": "#9CDCFE",
+          "highContrastLight": "#0451A5"
+        }
+      },
+      {
+        "id": "goAnnotations.markerValue",
+        "description": "Marker argument value.",
+        "defaults": {
+          "dark": "#CE9178",
+          "light": "#A31515",
+          "highContrast": "#CE9178",
+          "highContrastLight": "#A31515"
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test 'test/**/*.test.ts'",
+    "check": "npm run typecheck && npm run build && npm test"
+  },
+  "dependencies": {
+    "web-tree-sitter": "0.27.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "~1.90.0",
+    "esbuild": "^0.25.0",
+    "tree-sitter-go": "0.25.0",
+    "typescript": "^5.8.0"
+  }
+}
