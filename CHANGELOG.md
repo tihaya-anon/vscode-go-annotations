@@ -4,7 +4,7 @@ All notable changes to this project are documented in this file. The format foll
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/).
 
-## [0.1.0] - Unreleased
+## [0.1.0] - 2026-10-30
 
 First release.
 
@@ -21,3 +21,5 @@ First release.
   - checks with controller-gen's own severities, and did-you-mean quick fixes.
 - Marker definitions from the workspace's controller-gen in trusted workspaces, cached per
   version, with a built-in set from controller-gen v0.19.0.
+
+[0.1.0]: https://github.com/tihaya-anon/vscode-go-annotations/releases/tag/v0.1.0

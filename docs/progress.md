@@ -142,8 +142,9 @@ and the script that made it) is gone. The live controller-gen tests use `bin/con
 
 ## Next steps
 
-1. Publish: create and push the GitHub repo, optionally add README screenshots, set the CHANGELOG
-   date, tag `v0.1.0`, `npx vsce publish`.
+1. Publish 0.1.0 (repo pushed, `v0.1.0` tagged): upload the `.vsix` or `vsce publish`. Global
+   Azure DevOps PATs are retired on 2026-12-01, so later releases should use Marketplace Trusted
+   Publishing from GitHub Actions (`vsce publish --oidc`). Optionally add README screenshots.
 2. Possibly: value completion (bool, enums such as `scope=Cluster|Namespaced` are not in the
    help, so only bool), checking string values, a prettier config.
 3. Only if large files feel slow: incremental parsing with `tree.edit()` from
