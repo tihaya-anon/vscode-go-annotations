@@ -20,12 +20,16 @@ type Spec struct {
 	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name,omitempty" yaml:"name"` // trailing, not a doc comment
 
+	// plain is documented by its json name, as Kubernetes API conventions want.
 	// +custom:tool:key=value
 	Plain int `json:"plain"`
 	// Quoted uses an interpreted-string tag.
 	Quoted string "json:\"quoted,string\""
 
 	NoTag bool
+
+	// STATUS differs from both its names only in case.
+	Status int `json:"status"`
 }
 
 // not a doc comment: a blank line separates it from the declaration
@@ -57,3 +61,15 @@ type Embeds struct {
 /* Block is documented by a block comment
 that names Block again on its second line. */
 type Block int
+
+// lowercase starts with its own name in the wrong case.
+func Lowercase() {}
+
+// This doc does not start with the name at all.
+func Unnamed() {}
+
+// An Article may open with an article.
+type Article int
+
+// unexported declarations are not checked.
+func helper() {}

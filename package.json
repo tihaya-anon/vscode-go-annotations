@@ -48,6 +48,11 @@
           "default": true,
           "description": "Embolden the documented name (the struct, field, function, ... it is about) inside doc comments."
         },
+        "goAnnotations.docComments.checkStart": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Warn when the doc comment of an exported declaration does not start with its name (optionally after *A*, *An* or *The*). A struct field may also start with its json name, as Kubernetes API conventions require. Quick fixes correct a name written in the wrong case, or insert the name in front."
+        },
         "goAnnotations.markers.enabled": {
           "type": "boolean",
           "default": true,

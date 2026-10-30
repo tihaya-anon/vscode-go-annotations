@@ -5,7 +5,7 @@ import { existsSync } from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import type { Parser } from 'web-tree-sitter';
-import { analyze, type SpanKind } from './analyze.ts';
+import { analyze, type DocIssue, type SpanKind } from './analyze.ts';
 import builtinMarkers from './controller-gen-markers.json' with { type: 'json' };
 import { controllerGenHelp, controllerGenVersion } from './controllerGen.ts';
 import { createGoParser } from './goParser.ts';
@@ -82,6 +82,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         );
       },
     }),
+    vscode.languages.registerCodeActionsProvider('go', docStartFixes(painter), {
+      providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
+    }),
     vscode.window.onDidChangeVisibleTextEditors(() => painter.paintVisible()),
     vscode.workspace.onDidChangeTextDocument((e) => painter.schedule(e.document)),
     vscode.workspace.onDidCloseTextDocument((doc) => painter.forget(doc)),
@@ -155,7 +158,8 @@ export function deactivate(): void {}
 class Painter implements vscode.Disposable {
   private types = new Map<SpanKind, vscode.TextEditorDecorationType>();
   private timers = new Map<string, NodeJS.Timeout>();
-  private cache = new Map<string, { version: number; ranges: Map<SpanKind, vscode.Range[]> }>();
+  private cache = new Map<string, Analysed>();
+  private readonly diagnostics = vscode.languages.createDiagnosticCollection('go-annotations');
   private readonly parser: Parser;
   private registry: MarkerRegistry;
 
@@ -200,32 +204,41 @@ class Painter implements vscode.Disposable {
 
   forget(doc: vscode.TextDocument): void {
     this.cache.delete(doc.uri.toString());
+    this.diagnostics.delete(doc.uri);
+  }
+
+  // The doc-start issues of the document as it is now, for quick fixes.
+  docIssues(doc: vscode.TextDocument): DocIssue[] {
+    return this.analysed(doc).docIssues;
   }
 
   private paint(editor: vscode.TextEditor): void {
     const doc = editor.document;
     if (doc.languageId !== 'go') return;
-    const ranges = this.rangesFor(doc);
+    const { ranges } = this.analysed(doc);
     for (const [kind, type] of this.types) editor.setDecorations(type, ranges.get(kind) ?? []);
   }
 
-  private rangesFor(doc: vscode.TextDocument): Map<SpanKind, vscode.Range[]> {
+  private analysed(doc: vscode.TextDocument): Analysed {
     const key = doc.uri.toString();
     const cached = this.cache.get(key);
-    if (cached && cached.version === doc.version) return cached.ranges;
+    if (cached && cached.version === doc.version) return cached;
 
     const config = vscode.workspace.getConfiguration('goAnnotations');
     const tree = this.parser.parse(doc.getText());
     const ranges = new Map<SpanKind, vscode.Range[]>();
+    let docIssues: DocIssue[] = [];
     if (tree) {
-      const spans = analyze(tree.rootNode, {
+      const analysis = analyze(tree.rootNode, {
         structTags: config.get('structTags.enabled', true),
         docComments: config.get('docComments.enabled', true),
+        docStart: config.get('docComments.checkStart', true),
         markers: config.get('markers.enabled', true),
         registry: this.registry,
       });
       tree.delete();
-      for (const span of spans) {
+      docIssues = analysis.docIssues;
+      for (const span of analysis.spans) {
         const list = ranges.get(span.kind) ?? [];
         list.push(
           new vscode.Range(span.start.row, span.start.column, span.end.row, span.end.column),
@@ -233,8 +246,10 @@ class Painter implements vscode.Disposable {
         ranges.set(span.kind, list);
       }
     }
-    this.cache.set(key, { version: doc.version, ranges });
-    return ranges;
+    this.diagnostics.set(doc.uri, docIssues.map(diagnostic));
+    const analysed = { version: doc.version, ranges, docIssues };
+    this.cache.set(key, analysed);
+    return analysed;
   }
 
   private createTypes(): void {
@@ -263,5 +278,55 @@ class Painter implements vscode.Disposable {
   dispose(): void {
     for (const timer of this.timers.values()) clearTimeout(timer);
     this.disposeTypes();
+    this.diagnostics.dispose();
   }
+}
+
+interface Analysed {
+  version: number;
+  ranges: Map<SpanKind, vscode.Range[]>;
+  docIssues: DocIssue[];
+}
+
+function issueRange(issue: DocIssue): vscode.Range {
+  return new vscode.Range(issue.start.row, issue.start.column, issue.end.row, issue.end.column);
+}
+
+function diagnostic(issue: DocIssue): vscode.Diagnostic {
+  const names = issue.names.map((n) => `"${n}"`).join(' or ');
+  const d = new vscode.Diagnostic(
+    issueRange(issue),
+    `Doc comment should start with ${names}, the name it documents.`,
+    vscode.DiagnosticSeverity.Warning,
+  );
+  d.source = 'go-annotations';
+  d.code = 'doc-start';
+  return d;
+}
+
+// One action per fix the analyzer offers; the first, a Go name, is preferred.
+function docStartFixes(painter: Painter): vscode.CodeActionProvider {
+  return {
+    provideCodeActions(doc, range, context) {
+      if (!context.diagnostics.some((d) => d.code === 'doc-start')) return [];
+      const actions: vscode.CodeAction[] = [];
+      for (const issue of painter.docIssues(doc)) {
+        const at = issueRange(issue);
+        if (!at.intersection(range)) continue;
+        issue.fixes.forEach(({ name, text }, i) => {
+          const title =
+            text === name
+              ? `Change "${issue.word}" to "${name}"`
+              : `Start the doc comment with "${name}"`;
+          const action = new vscode.CodeAction(title, vscode.CodeActionKind.QuickFix);
+          action.edit = new vscode.WorkspaceEdit();
+          action.edit.replace(doc.uri, at, text);
+          action.diagnostics = context.diagnostics.filter((d) => d.range.isEqual(at));
+          action.isPreferred = i === 0;
+          actions.push(action);
+        });
+      }
+      return actions;
+    },
+  };
 }

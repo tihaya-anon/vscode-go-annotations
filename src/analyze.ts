@@ -22,10 +22,31 @@ export interface Span {
   end: Point;
 }
 
+// A doc comment of an exported declaration that does not start with its name.
+export interface DocIssue {
+  // The word the doc starts with instead.
+  start: Point;
+  end: Point;
+  word: string;
+  // Every name the doc may start with: the Go names, and a field's json name.
+  names: string[];
+  // Quick fixes, each replacing `word` with `text`: the name itself when `word` is that name in
+  // the wrong case, otherwise the name followed by `word`, since a doc that opens with a verb
+  // ("defines the ...") only lacks its subject. Go names come first.
+  fixes: Array<{ name: string; text: string }>;
+}
+
+export interface Analysis {
+  spans: Span[];
+  docIssues: DocIssue[];
+}
+
 export interface AnalyzeOptions {
   structTags: boolean;
   docComments: boolean;
   markers: boolean;
+  // Report doc comments that do not start with their declaration's name.
+  docStart?: boolean;
   // Splits marker name from first argument exactly; without it, or for a marker it does not know,
   // a lexical guess is used (see parseMarker).
   registry?: MarkerRegistry;
@@ -55,16 +76,27 @@ const MARKER = /^\/\/\s*\+(?=[A-Za-z_])/;
 // `// +build linux`, the pre-Go 1.17 build constraint, has the marker shape but is not one.
 const BUILD_CONSTRAINT = /^\/\/\s*\+build(\s|$)/;
 
-export function analyze(root: Node, options: AnalyzeOptions): Span[] {
+export function analyze(root: Node, options: AnalyzeOptions): Analysis {
   const spans: Span[] = [];
-  // Doc comment id -> the names its declaration declares.
+  const docIssues: DocIssue[] = [];
+  // Doc comment id -> the names it may mention.
   const docComments = new Map<number, string[]>();
 
   walk(root, (node) => {
-    if (options.docComments && DOCUMENTED.has(node.type)) {
-      const names = declaredNames(node);
-      if (names.length > 0) {
-        for (const comment of docCommentGroup(node)) docComments.set(comment.id, names);
+    if ((options.docComments || options.docStart) && DOCUMENTED.has(node.type)) {
+      const goNames = declaredNames(node);
+      // Kubernetes API conventions (kube-api-linter's commentstart) start a field's doc with its
+      // serialized name instead, since the doc becomes the CRD's OpenAPI description. Both count.
+      const json = node.type === 'field_declaration' ? jsonName(node) : undefined;
+      const names = json && !goNames.includes(json) ? [...goNames, json] : goNames;
+      const group = docCommentGroup(node);
+      if (options.docComments && names.length > 0) {
+        for (const comment of group) docComments.set(comment.id, names);
+      }
+      // As golint/revive: only exported declarations, and the package clause is out of scope.
+      if (options.docStart && node.type !== 'package_clause' && goNames.some(isExported)) {
+        const issue = docStartIssue(group, names);
+        if (issue) docIssues.push(issue);
       }
     }
     if (options.structTags && node.type === 'field_declaration') {
@@ -80,7 +112,7 @@ export function analyze(root: Node, options: AnalyzeOptions): Span[] {
       }
     }
   });
-  return spans;
+  return { spans, docIssues };
 }
 
 // Pre-order, and a declaration is visited before the comments that follow it, but its doc
@@ -146,6 +178,55 @@ function declaredNames(node: Node): string[] {
     default:
       return node.childrenForFieldName('name').map((n) => n.text);
   }
+}
+
+function isExported(name: string): boolean {
+  return /^\p{Lu}/u.test(name);
+}
+
+// The name in a field's json tag, if it has one: `spec` in json:"spec,omitempty".
+function jsonName(field: Node): string | undefined {
+  const tag = field.childForFieldName('tag');
+  if (!tag) return undefined;
+  const body = tag.text.slice(1, -1);
+  const text = tag.type === 'raw_string_literal' ? body : body.replace(/\\"/g, '"');
+  const name = /(?:^|\s)json:"([^",]*)/.exec(text)?.[1];
+  return name && name !== '-' ? name : undefined;
+}
+
+// Go doc comments may open with an article: "A Foo is ...".
+const ARTICLES = new Set(['A', 'An', 'The']);
+const LEADING_WORD = /^(\/\/|\/\*)[ \t]*([\p{L}\p{N}_]+)(?:[ \t]+([\p{L}\p{N}_]+))?/u;
+
+// The first prose line of the group (markers and directives are not prose) must start with one of
+// the names. A doc that starts with no word at all, or with text on a later line of a block
+// comment, is left alone.
+function docStartIssue(group: Node[], names: string[]): DocIssue | null {
+  const first = [...group]
+    .reverse()
+    .find((c) => !DIRECTIVE.test(c.text) && parseMarker(c.text) === null);
+  if (!first) return null;
+  const match = LEADING_WORD.exec(first.text);
+  if (!match) return null;
+  const article = ARTICLES.has(match[2]!) && match[3] !== undefined;
+  const word = article ? match[3]! : match[2]!;
+  // Both words end their part of the match, so each is found from the end.
+  const offset = article ? match[0].length - word.length : match[0].indexOf(word, 2);
+  if (names.includes(word)) return null;
+  const { row, column } = first.startPosition;
+  return {
+    start: { row, column: column + offset },
+    end: { row, column: column + offset + word.length },
+    word,
+    names,
+    fixes: fixesFor(word, names),
+  };
+}
+
+function fixesFor(word: string, names: string[]): DocIssue['fixes'] {
+  const recased = names.filter((n) => n.toLowerCase() === word.toLowerCase());
+  if (recased.length > 0) return recased.map((name) => ({ name, text: name }));
+  return names.map((name) => ({ name, text: `${name} ${word}` }));
 }
 
 // Whole-word, case-sensitive mentions of the declared names inside a doc comment. Go doc comments

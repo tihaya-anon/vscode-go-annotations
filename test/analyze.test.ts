@@ -25,7 +25,7 @@ before(async () => {
 function render(source: string, options: AnalyzeOptions = ALL): string[] {
   const tree = parser.parse(source)!;
   const lines = source.split('\n');
-  const out = analyze(tree.rootNode, options).map((s: Span) => {
+  const out = analyze(tree.rootNode, options).spans.map((s: Span) => {
     const text =
       s.start.row === s.end.row
         ? lines[s.start.row]!.slice(s.start.column, s.end.column)
@@ -45,8 +45,8 @@ describe('sample.go', () => {
 
   test('struct tags split into key, name and options', () => {
     const spans = render(source);
-    assert.deepEqual(only(spans, 'structTagKey'), ['json', 'yaml', 'json', 'json']);
-    assert.deepEqual(only(spans, 'structTagName'), ['name', 'name', 'plain', 'quoted']);
+    assert.deepEqual(only(spans, 'structTagKey'), ['json', 'yaml', 'json', 'json', 'json']);
+    assert.deepEqual(only(spans, 'structTagName'), ['name', 'name', 'plain', 'quoted', 'status']);
     assert.deepEqual(only(spans, 'structTagOption'), ['omitempty', 'string']);
   });
 
@@ -55,6 +55,8 @@ describe('sample.go', () => {
       'sample',
       'Spec',
       'Name',
+      // A field's json name counts as its name too.
+      'plain',
       'Quoted',
       'Run',
       'Grouped',
@@ -69,7 +71,27 @@ describe('sample.go', () => {
       // A block comment, across its two lines.
       'Block',
       'Block',
+      'Article',
     ]);
+  });
+
+  test('doc start: exported declarations whose doc does not open with a name', () => {
+    const lines = source.split('\n');
+    const tree = parser.parse(source)!;
+    const issues = analyze(tree.rootNode, { ...ALL, docStart: true }).docIssues.map((i) => ({
+      over: lines[i.start.row]!.slice(i.start.column, i.end.column),
+      fixes: i.fixes.map((f) => f.text),
+    }));
+    tree.delete();
+    // Not reported: `// plain ...` (json name), `// An Article ...` (article), unexported
+    // `helper`, the package clause, and docs that open with the name.
+    assert.deepEqual(issues, [
+      { over: 'STATUS', fixes: ['Status', 'status'] },
+      { over: 'lowercase', fixes: ['Lowercase'] },
+      // Not a case slip: the fix puts the name in front.
+      { over: 'This', fixes: ['Unnamed This'] },
+    ]);
+    assert.deepEqual(analyze(parser.parse(source)!.rootNode, ALL).docIssues, [], 'off by default');
   });
 
   test('markers: the registry splits name from first argument', () => {
@@ -113,7 +135,7 @@ describe('sample.go', () => {
     const line = '\t// Area 返回面积，即 Area。';
     const row = source.split('\n').indexOf(line);
     const tree = parser.parse(source)!;
-    const areas = analyze(tree.rootNode, ALL).filter(
+    const areas = analyze(tree.rootNode, ALL).spans.filter(
       (s) => s.kind === 'docCommentName' && s.start.row === row,
     );
     tree.delete();
@@ -153,7 +175,7 @@ describe('playground', () => {
       const source = readFileSync(path.join(dir, file), 'utf8');
       const lines = source.split('\n');
       const tree = parser.parse(source)!;
-      for (const s of analyze(tree.rootNode, ALL)) {
+      for (const s of analyze(tree.rootNode, ALL).spans) {
         assert.ok(s.end.column <= lines[s.end.row]!.length, `${file}:${s.end.row + 1}`);
         assert.ok(
           s.start.row < s.end.row || s.start.column < s.end.column,

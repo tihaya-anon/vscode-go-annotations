@@ -4,7 +4,10 @@ JetBrains-style highlighting for Go in VS Code, layered over the official Go ext
 semantic highlighting:
 
 - struct tags: key, name and options in separate colours;
-- doc comments: the name being documented (`Dataset` in `// Dataset is ...`) in bold;
+- doc comments: the name being documented (`Dataset` in `// Dataset is ...`, or a field's json
+  name, `spec` in `// spec defines ...`) in bold. A doc of an exported declaration that does not
+  start with one of those names gets a warning, with quick fixes that correct the case or insert
+  the name;
 - controller-gen / Kubebuilder markers such as `// +kubebuilder:validation:Minimum=1`: name in
   bold, arguments in italics. Hovering a marker shows controller-gen's documentation for it, or
   for the argument under the cursor (type, required or optional).
@@ -18,6 +21,7 @@ and differ only in weight and style; struct tags get colours.
 | --- | --- |
 | `goAnnotations.structTags.enabled` | `true` |
 | `goAnnotations.docComments.enabled` | `true` |
+| `goAnnotations.docComments.checkStart` | `true` |
 | `goAnnotations.markers.enabled` | `true` |
 | `goAnnotations.comments.useColors` | `false` |
 | `goAnnotations.markers.controllerGenPath` | `""` |

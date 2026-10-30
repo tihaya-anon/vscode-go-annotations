@@ -79,13 +79,26 @@ Done:
 
 Not yet verified: how the hover looks in VS Code next to gopls's own hover.
 
+The owner liked the hover; titles are now bold with italic qualifiers (committed as eb9ad26).
+
+## 2026-10-30 — phase 5: doc start check
+
+Prompted by `// spec defines ...` on `Dataset.Spec` not being emboldened. That lowercase start is
+deliberate Kubernetes convention, so (owner's choice) json names now count as the documented
+name, and the check warns only when a doc opens with neither name:
+
+- `analyze()` returns `{ spans, docIssues }`; `docStart` option; json names highlighted.
+- Warning `doc-start`; quick fixes replace a wrong-case name, or else insert the name in front
+  (after the owner tried it on a verb-first doc). Setting `goAnnotations.docComments.checkStart`.
+- Zero warnings over the playground's Go files.
+- The owner checked the warning and both kinds of quick fix in VS Code.
+
 ## Next steps
 
-1. F5: hover over markers in `playground/api/v1alpha1/*_types.go`.
-2. Completion after `// +` and after `marker:`; diagnostics (unknown marker within covered
+1. Completion after `// +` and after `marker:`; diagnostics (unknown marker within covered
    namespaces, missing required argument, wrong target, deprecated) — see
    [design.md](design.md#marker-registry) for the scaffold-marker caveat. Wrong-target needs the
    attachment target (package/type/field) from the syntax tree, which hover does not use yet.
-3. Only if large files feel slow: incremental parsing with `tree.edit()` from
+2. Only if large files feel slow: incremental parsing with `tree.edit()` from
    `TextDocumentChangeEvent.contentChanges`.
-4. Decide a licence (package.json says `UNLICENSED` for now) and whether to publish.
+3. Decide a licence (package.json says `UNLICENSED` for now) and whether to publish.

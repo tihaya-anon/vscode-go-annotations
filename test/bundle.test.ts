@@ -20,6 +20,20 @@ interface Workspace {
   // Options of each decoration type created, in order.
   types?: Array<{ color?: { id: string }; fontWeight?: string; fontStyle?: string }>;
   hover?: HoverProvider;
+  codeActions?: CodeActionProvider;
+  // The one open document.
+  document?: unknown;
+  diagnostics?: Array<{ message: string; code: string; range: Range }>;
+}
+
+type Range = { start: number[]; end: number[] };
+
+interface CodeActionProvider {
+  provideCodeActions(
+    doc: unknown,
+    range: unknown,
+    context: { diagnostics: unknown[] },
+  ): Array<{ title: string; isPreferred: boolean; edit: { edits: unknown[] } }>;
 }
 
 interface HoverProvider {
@@ -37,9 +51,10 @@ function stubVscode(text: string, painted: Painted, ws: Workspace) {
     languageId: 'go',
     version: 1,
     uri: { toString: () => 'file:///sample.go' },
-    getText: () => text,
     lineAt: (line: number) => ({ text: lines[line] }),
+    getText: () => text,
   };
+  ws.document = document;
   const editor = {
     document,
     setDecorations(type: { id: string }, ranges: Array<{ start: number[]; end: number[] }>) {
@@ -61,6 +76,36 @@ function stubVscode(text: string, painted: Painted, ws: Workspace) {
         this.start = [sl, sc];
         this.end = [el, ec];
       }
+      // Single-line ranges are all the extension compares.
+      intersection(other: Range) {
+        const overlap = this.start[0] === other.start[0] && this.start[1]! <= other.end[1]!;
+        return overlap && other.start[1]! <= this.end[1]! ? this : undefined;
+      }
+      isEqual(other: Range) {
+        return String([this.start, this.end]) === String([other.start, other.end]);
+      }
+    },
+    Diagnostic: class {
+      range: unknown;
+      message: string;
+      constructor(range: unknown, message: string) {
+        this.range = range;
+        this.message = message;
+      }
+    },
+    DiagnosticSeverity: { Warning: 1 },
+    CodeActionKind: { QuickFix: 'quickfix' },
+    CodeAction: class {
+      title: string;
+      constructor(title: string) {
+        this.title = title;
+      }
+    },
+    WorkspaceEdit: class {
+      edits: unknown[] = [];
+      replace(_uri: unknown, range: unknown, text: string) {
+        this.edits.push({ range, text });
+      }
     },
     window: {
       visibleTextEditors: [editor],
@@ -73,6 +118,17 @@ function stubVscode(text: string, painted: Painted, ws: Workspace) {
     },
     commands: { registerCommand: noop },
     languages: {
+      createDiagnosticCollection: () => ({
+        set: (_uri: unknown, diagnostics: Workspace['diagnostics']) => {
+          ws.diagnostics = diagnostics;
+        },
+        delete() {},
+        dispose() {},
+      }),
+      registerCodeActionsProvider: (_selector: string, provider: CodeActionProvider) => {
+        ws.codeActions = provider;
+        return { dispose() {} };
+      },
       registerHoverProvider: (_selector: string, provider: HoverProvider) => {
         ws.hover = provider;
         return { dispose() {} };
@@ -156,8 +212,8 @@ test('dist/extension.cjs activates and paints', { skip: built }, async () => {
   // Colours on, so that every decoration type is told apart by its theme colour id.
   const ws = { trusted: false, folders: [root], logs: [], config: { 'comments.useColors': true } };
   const painted = await activate(ws);
-  assert.equal(painted.get('goAnnotations.structTagKey')?.length, 4);
-  assert.equal(painted.get('goAnnotations.docCommentName')?.length, 14);
+  assert.equal(painted.get('goAnnotations.structTagKey')?.length, 5);
+  assert.equal(painted.get('goAnnotations.docCommentName')?.length, 16);
   assert.equal(painted.get('goAnnotations.markerName')?.length, 10);
   // The built-in registry is there from the first paint: `scope` is split off its marker.
   assert.equal(painted.get('goAnnotations.markerArgument')?.length, 7);
@@ -193,6 +249,31 @@ test('hover describes the marker under the cursor', { skip: built }, async () =>
     ws.hover!.provideHover(doc, { line, character: 1 }),
     undefined,
     'the // is not part of the marker',
+  );
+});
+
+test('doc-start warnings come with quick fixes', { skip: built }, async () => {
+  const ws: Workspace = { trusted: false, folders: [root], logs: [] };
+  await activate(ws);
+  const lowercase = ws.diagnostics!.find((d) => d.message.includes('"Lowercase"'))!;
+  assert.equal(ws.diagnostics!.length, 3);
+  assert.equal(lowercase.code, 'doc-start');
+  const actions = ws.codeActions!.provideCodeActions(
+    ws.document,
+    lowercase.range,
+    { diagnostics: [lowercase] },
+  );
+  assert.deepEqual(
+    actions.map((a) => [a.title, a.isPreferred, a.edit.edits]),
+    [['Change "lowercase" to "Lowercase"', true, [{ range: lowercase.range, text: 'Lowercase' }]]],
+  );
+  const unnamed = ws.diagnostics!.find((d) => d.message.includes('"Unnamed"'))!;
+  const insert = ws.codeActions!.provideCodeActions(ws.document, unnamed.range, {
+    diagnostics: [unnamed],
+  });
+  assert.deepEqual(
+    insert.map((a) => [a.title, a.edit.edits]),
+    [['Start the doc comment with "Unnamed"', [{ range: unnamed.range, text: 'Unnamed This' }]]],
   );
 });
 

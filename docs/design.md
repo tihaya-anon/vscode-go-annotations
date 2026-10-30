@@ -66,7 +66,16 @@ Costs accepted with B:
   Only the declared name is highlighted, wherever it appears in the group as a whole,
   case-sensitive word (`NotX` does not match field `X`). The name is the spec's for a single
   `type`/`const`/`var` declaration, every name for `X, Y int`, the type's for an embedded field
-  (`*pkg.T[int]` -> `T`); a parenthesised group's own doc has no name.
+  (`*pkg.T[int]` -> `T`); a parenthesised group's own doc has no name. A field's json tag name
+  counts as a name too: Kubernetes API conventions (kube-api-linter `commentstart`, and what
+  Kubebuilder scaffolds) start field docs with it because the doc becomes the CRD's OpenAPI
+  description. The owner chose to accept both conventions rather than pick one.
+- **Doc start** (diagnostic `doc-start`): as golint/revive, the first prose line (not a marker or
+  directive) of an exported declaration's doc must open with one of those names, optionally
+  after `A`/`An`/`The`. The package clause is skipped. Quick fixes (Go name preferred): a word
+  that differs from a name only in case is replaced by it; any other first word gets the name
+  inserted before it, which suits the common verb-first doc (`// defines the ...`). Diagnostics are computed when a
+  document is painted, so only for visible Go files.
 - **Struct tag**: `reflect.StructTag` syntax, `key:"value"` pairs; the value split on `,` into a
   name and options (encoding/json convention). Raw and interpreted (`"json:\"x\""`) tags both work;
   multi-line tags are skipped.
