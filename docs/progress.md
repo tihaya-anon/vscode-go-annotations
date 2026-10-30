@@ -147,6 +147,15 @@ and the script that made it) is gone. The live controller-gen tests use `bin/con
 `.github/workflows/publish.yml` with Trusted Publishing (run 41030595813, a manual run on `main`
 because the `v0.1.0` tag predates the workflow). Later releases go out by pushing a `v*` tag.
 
+## 2026-10-30 — 0.1.1
+
+0.1.0's argument blocks were invisible: the CSS used `var(--vscode-goAnnotations-markerArgumentPair)`
+and VS Code defines no CSS variable for extension colours (the owner checked in DevTools: rule
+present, variable empty). The switch from `backgroundColor` to injected CSS had been committed
+without the owner seeing it. 0.1.1 tints the blocks with `color-mix()` of `currentColor`, drops the
+colour, adds `goAnnotations.markers.argumentBlocks`; the owner checked it before release. Lesson: a
+rendering change is not done until it has been seen in VS Code.
+
 ## Next steps
 
 1. Optionally add README screenshots (Marketplace page).
