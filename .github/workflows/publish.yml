@@ -1,0 +1,44 @@
+# Publishes to the VS Code Marketplace with Trusted Publishing: GitHub's OIDC token is exchanged
+# for a short-lived Marketplace credential, so no PAT is stored. It needs a Trusted Publishing
+# policy on publisher chihayaanon naming this repository and this file (publish.yml).
+#
+# Runs on a v* tag. Manual runs publish the version in package.json on the chosen branch; that is
+# how 0.1.0 went out, its tag being older than this workflow.
+name: Publish
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # Lets the job request the OIDC token that vsce exchanges.
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # The tests run TypeScript directly, which needs Node's type stripping (on by default
+          # from Node 23.6).
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Tag matches package.json
+        if: github.ref_type == 'tag'
+        run: |
+          version="v$(node -p "require('./package.json').version")"
+          if [ "$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::tag $GITHUB_REF_NAME but package.json says $version"
+            exit 1
+          fi
+
+      # vscode:prepublish runs npm run check, then the minified build.
+      - run: npx vsce publish --oidc

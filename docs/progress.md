@@ -142,9 +142,10 @@ and the script that made it) is gone. The live controller-gen tests use `bin/con
 
 ## Next steps
 
-1. Publish 0.1.0 (repo pushed, `v0.1.0` tagged): upload the `.vsix` or `vsce publish`. Global
-   Azure DevOps PATs are retired on 2026-12-01, so later releases should use Marketplace Trusted
-   Publishing from GitHub Actions (`vsce publish --oidc`). Optionally add README screenshots.
+1. Publish 0.1.0: the repo is pushed and `v0.1.0` tagged; `.github/workflows/publish.yml` publishes
+   with Trusted Publishing once the owner has created the policy on the Marketplace publisher
+   page. The tag predates the workflow, so 0.1.0 goes out by a manual run on `main`
+   (`gh workflow run publish.yml`). Optionally add README screenshots.
 2. Possibly: value completion (bool, enums such as `scope=Cluster|Namespaced` are not in the
    help, so only bool), checking string values, a prettier config.
 3. Only if large files feel slow: incremental parsing with `tree.edit()` from

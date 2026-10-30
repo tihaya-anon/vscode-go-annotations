@@ -57,6 +57,13 @@ owner's MCP Config Manager extension uses the same pair). `web-tree-sitter` is a
 because esbuild bundles it, which keeps `node_modules` out of the `.vsix`; it is pinned exactly
 because its JS and `.wasm` must match. Record user-visible changes in `CHANGELOG.md`.
 
+Releasing: bump `version`, date the `CHANGELOG.md` entry, commit, tag `vX.Y.Z` and push the tag.
+`.github/workflows/publish.yml` publishes it with Marketplace Trusted Publishing (`vsce publish
+--oidc`, no PAT; global Azure DevOps PATs are retired on 2026-12-01). It needs the Trusted
+Publishing policy on publisher `chihayaanon` for this repository and `publish.yml`. Push to
+`origin`, which uses the `github.com-personal` SSH alias: plain `github.com` is the owner's work
+account.
+
 `npm test` runs `node --test` directly on the `.ts` sources (Node strips the types), so the
 analyzer tests need no build. `test/bundle.test.ts` tests the built bundle and is skipped when
 `dist/` is missing; `npm run check` builds before it tests, so it always runs there.
