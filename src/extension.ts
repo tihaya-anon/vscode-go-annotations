@@ -21,16 +21,19 @@ import { MarkerRegistry } from './markers.ts';
 // comment colour untouched or a goAnnotations.* theme colour (goAnnotations.comments.useColors).
 // Struct tags are code and always use their colours.
 //
-// markerArgumentPair is a faint rounded block behind each `key=value` of a marker. Its colour is a
-// white or black overlay with no hue, so it reads as lighter or darker on any theme and leaves the
-// text in the comment colour; it applies whether or not comments.useColors is on.
+// markerArgumentPair is a faint rounded block behind each `key=value` of a marker, tinted with the
+// text's own colour (the comment colour), so it suits any theme without a colour of its own.
 //
 // It is painted on the text's own span, not with `backgroundColor`: VS Code draws that in a layer
 // one line high, so blocks on consecutive lines touched. An inline span's background covers only
 // the font's height, leaving a gap. There is no option for it, so the CSS goes in through
 // `textDecoration`, which VS Code copies into the inline style verbatim; if that ever stops
-// working, the blocks disappear and nothing else changes. The colour is the contributed theme
-// colour's CSS variable, so it stays themable.
+// working, the blocks disappear and nothing else changes. The tint cannot be a contributed theme
+// colour: VS Code defines no CSS variable for extension colours (seen in DevTools: the rule was
+// there, the variable empty), so `var()` of one came out transparent and 0.1.0 shipped without
+// blocks. The colour API resolves theme colours only for its own options, not this string.
+const ARGUMENT_BLOCK =
+  'none; background-color: color-mix(in srgb, currentColor 14%, transparent); border-radius: 3px';
 const STYLES: Record<
   SpanKind,
   { inComment: boolean; fontWeight?: string; fontStyle?: string; background?: boolean }
@@ -316,19 +319,17 @@ class Painter implements vscode.Disposable {
   }
 
   private createTypes(): void {
-    const useColors = vscode.workspace
-      .getConfiguration('goAnnotations')
-      .get<boolean>('comments.useColors', false);
+    const config = vscode.workspace.getConfiguration('goAnnotations');
+    const useColors = config.get<boolean>('comments.useColors', false);
+    const blocks = config.get<boolean>('markers.argumentBlocks', true);
     for (const kind of Object.keys(STYLES) as SpanKind[]) {
       const style = STYLES[kind];
       const colored = !style.background && (useColors || !style.inComment);
-      const block =
-        `none; background-color: var(--vscode-goAnnotations-${kind}); ` + 'border-radius: 3px';
       this.types.set(
         kind,
         vscode.window.createTextEditorDecorationType({
           color: colored ? new vscode.ThemeColor(`goAnnotations.${kind}`) : undefined,
-          textDecoration: style.background ? block : undefined,
+          textDecoration: style.background && blocks ? ARGUMENT_BLOCK : undefined,
           fontWeight: style.fontWeight,
           fontStyle: style.fontStyle,
         }),

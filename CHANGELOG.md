@@ -4,6 +4,18 @@ All notable changes to this project are documented in this file. The format foll
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.1] - 2026-10-30
+
+### Fixed
+
+- The block behind each `key=value` of a marker did not show: it used a theme colour through a CSS
+  variable that VS Code does not define for extensions. It is now tinted with the comment colour.
+
+### Changed
+
+- The `goAnnotations.markerArgumentPair` colour is gone (it never took effect);
+  `goAnnotations.markers.argumentBlocks` turns the blocks off.
+
 ## [0.1.0] - 2026-10-30
 
 First release.
@@ -22,4 +34,5 @@ First release.
 - Marker definitions from the workspace's controller-gen in trusted workspaces, cached per
   version, with a built-in set from controller-gen v0.19.0.
 
+[0.1.1]: https://github.com/tihaya-anon/vscode-go-annotations/releases/tag/v0.1.1
 [0.1.0]: https://github.com/tihaya-anon/vscode-go-annotations/releases/tag/v0.1.0

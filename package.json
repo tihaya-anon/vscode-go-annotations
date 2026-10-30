@@ -2,7 +2,7 @@
   "name": "go-annotations",
   "displayName": "Go Annotations",
   "description": "GoLand-style highlighting for Go: struct tags, documented names, and Kubebuilder / controller-gen markers with hover, completion and checks.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "chihayaanon",
   "license": "MIT",
   "icon": "resources/icon.png",
@@ -82,6 +82,11 @@
           "type": "boolean",
           "default": true,
           "markdownDescription": "Check markers against controller-gen's: unknown `kubebuilder:*` markers, markers in places controller-gen does not read or for another target (all silently ignored by controller-gen), and unknown, missing or ill-typed arguments (which make it fail)."
+        },
+        "goAnnotations.markers.argumentBlocks": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Set each `key=value` of a marker with named arguments on a faint block, tinted with the comment colour, so that long markers read as separate pieces."
         },
         "goAnnotations.markers.controllerGenPath": {
           "type": "string",
@@ -170,16 +175,6 @@
           "light": "#A31515",
           "highContrast": "#CE9178",
           "highContrastLight": "#A31515"
-        }
-      },
-      {
-        "id": "goAnnotations.markerArgumentPair",
-        "description": "Background behind each key=value of a marker with named arguments, so they read as separate pieces. A hueless overlay by default; set it to #0000 to turn it off.",
-        "defaults": {
-          "dark": "#ffffff0f",
-          "light": "#0000000d",
-          "highContrast": "#ffffff26",
-          "highContrastLight": "#0000001f"
         }
       }
     ],

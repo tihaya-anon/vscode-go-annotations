@@ -64,6 +64,7 @@ an untrusted workspace no binary is run.
 | `goAnnotations.comments.useColors` | `false` | Colour doc names and markers instead of only changing weight and style. |
 | `goAnnotations.markers.enabled` | `true` | Highlight, hover and complete markers. |
 | `goAnnotations.markers.diagnostics` | `true` | Check markers. |
+| `goAnnotations.markers.argumentBlocks` | `true` | A faint block behind each `key=value`. |
 | `goAnnotations.markers.controllerGenPath` | `""` | The controller-gen to read markers from. |
 
 ## Colours
@@ -74,13 +75,14 @@ Colours are theme colours and can be overridden. Doc names and markers only take
 ```jsonc
 "workbench.colorCustomizations": {
   "goAnnotations.structTagKey": "#C586C0",
-  "goAnnotations.markerArgumentPair": "#ffffff14"
+  "goAnnotations.markerName": "#BBB529"
 }
 ```
 
 Available, each prefixed `goAnnotations.`: `structTagKey`, `structTagName`, `structTagOption`,
-`docCommentName`, `markerPrefix`, `markerName`, `markerArgument`, `markerValue` and
-`markerArgumentPair`, the background behind each `key=value` (`#0000` turns it off).
+`docCommentName`, `markerPrefix`, `markerName`, `markerArgument` and `markerValue`. The block
+behind each `key=value` is tinted with the comment colour itself rather than a colour of its own;
+`goAnnotations.markers.argumentBlocks` turns it off.
 
 ## Development
 

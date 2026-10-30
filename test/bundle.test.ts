@@ -255,7 +255,19 @@ test('by default, comment decorations keep the comment colour', { skip: built },
   ]);
   assert.ok(ws.types!.some((t) => !t.color && t.fontWeight === 'bold'));
   const pair = ws.types!.find((t) => t.textDecoration);
-  assert.match(pair!.textDecoration!, /background-color: var\(--vscode-goAnnotations-markerArgumentPair\)/);
+  // Tinted from the text colour: VS Code defines no CSS variable for an extension's colours.
+  assert.match(pair!.textDecoration!, /background-color: color-mix\(in srgb, currentColor \d+%/);
+  assert.ok(!pair!.textDecoration!.includes('var('));
+
+  const off: Workspace = {
+    trusted: false,
+    folders: [root],
+    logs: [],
+    types: [],
+    config: { 'markers.argumentBlocks': false },
+  };
+  await activate(off);
+  assert.ok(!off.types!.some((t) => t.textDecoration), 'markers.argumentBlocks turns them off');
   assert.equal(pair!.color, undefined);
 });
 
