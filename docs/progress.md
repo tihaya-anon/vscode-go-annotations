@@ -64,16 +64,28 @@ The owner ran it (F5) and found it working. Their feedback and what changed:
   italic; `goAnnotations.comments.useColors` restores colours. Struct tags still coloured —
   ask the owner whether those should be toned down too.
 
+The owner accepted these styles, struct tag colours included (committed as d1c847c).
+
+## 2026-10-30 — phase 4: marker hover
+
+Done:
+
+- `parseMarker()` in `src/analyze.ts`: marker splitting as a structure (offsets of `+`, name,
+  each argument's key and value), used by both highlighting and hover.
+- `src/markerHover.ts`: markdown for the marker or the argument under the cursor; a summary that
+  controller-gen cut mid-sentence is rejoined with its details. Registered as a `go` hover
+  provider using whichever registry is loaded. Tests in `test/markerHover.test.ts` and through the
+  bundle stub.
+
+Not yet verified: how the hover looks in VS Code next to gopls's own hover.
+
 ## Next steps
 
-1. Re-run in VS Code with golang.go installed in WSL: check the log command, the new styles, and
-   whether struct tag colours are also too loud.
-2. Hover for markers and their arguments from the registry (summary, details, type, optional,
-   deprecation). Needs a lookup from a position to the marker/argument under it: return marker
-   spans with their definition from the analyzer, or re-split the line on hover.
-3. Completion after `// +` and after `marker:`; diagnostics (unknown marker within covered
+1. F5: hover over markers in `playground/api/v1alpha1/*_types.go`.
+2. Completion after `// +` and after `marker:`; diagnostics (unknown marker within covered
    namespaces, missing required argument, wrong target, deprecated) — see
-   [design.md](design.md#marker-registry) for the scaffold-marker caveat.
-4. Only if large files feel slow: incremental parsing with `tree.edit()` from
+   [design.md](design.md#marker-registry) for the scaffold-marker caveat. Wrong-target needs the
+   attachment target (package/type/field) from the syntax tree, which hover does not use yet.
+3. Only if large files feel slow: incremental parsing with `tree.edit()` from
    `TextDocumentChangeEvent.contentChanges`.
-5. Decide a licence (package.json says `UNLICENSED` for now) and whether to publish.
+4. Decide a licence (package.json says `UNLICENSED` for now) and whether to publish.

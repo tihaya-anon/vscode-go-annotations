@@ -27,7 +27,7 @@ export interface AnalyzeOptions {
   docComments: boolean;
   markers: boolean;
   // Splits marker name from first argument exactly; without it, or for a marker it does not know,
-  // a lexical guess is used (see markerSpans).
+  // a lexical guess is used (see parseMarker).
   registry?: MarkerRegistry;
 }
 
@@ -72,8 +72,9 @@ export function analyze(root: Node, options: AnalyzeOptions): Span[] {
       if (tag) structTagSpans(tag, spans);
     }
     if (node.type === 'comment') {
-      if (options.markers && MARKER.test(node.text) && !BUILD_CONSTRAINT.test(node.text)) {
-        markerSpans(node, spans, options.registry);
+      const marker = options.markers ? parseMarker(node.text, options.registry) : null;
+      if (marker) {
+        markerSpans(node, marker, spans);
       } else if (docComments.has(node.id) && !DIRECTIVE.test(node.text)) {
         docNameSpans(node, docComments.get(node.id)!, spans);
       }
@@ -212,64 +213,91 @@ function structTagSpans(tag: Node, spans: Span[]): void {
   }
 }
 
+function markerSpans(comment: Node, marker: MarkerParts, spans: Span[]): void {
+  const base = comment.startPosition;
+  const push = (kind: SpanKind, [from, to]: Range) => {
+    const at = (offset: number): Point => ({ row: base.row, column: base.column + offset });
+    if (to > from) spans.push({ kind, start: at(from), end: at(to) });
+  };
+  push('markerPrefix', [marker.prefix, marker.prefix + 1]);
+  push('markerName', marker.name);
+  for (const arg of marker.arguments) {
+    if (arg.key) push('markerArgument', arg.key);
+    push('markerValue', arg.value);
+  }
+}
+
+// [from, to) offsets into a comment's text.
+export type Range = [number, number];
+
+export interface MarkerParts {
+  // Offset of the `+`.
+  prefix: number;
+  name: Range;
+  // The text of `name`, e.g. kubebuilder:validation:Minimum.
+  nameText: string;
+  // In source order. The anonymous value of `+name=value` has no key.
+  arguments: Array<{ key?: Range; keyText?: string; value: Range }>;
+}
+
+// Splits a one-line `// +marker...` comment; null if it is not one. Shared by highlighting and
+// hover so that both agree on what is the name and what an argument.
+//
 // controller-gen marker syntax: +path:to:name, +path:to:name=value, or +path:to:name:k=v,k2=v2.
 // Lexically, `+a:b:c=1` (marker a:b:c, anonymous value) and `+a:b:c=1` (marker a:b, argument c)
 // look the same; the registry tells them apart. For a marker it does not know, the last path
 // segment is read as an argument key only when two or more key=value pairs follow, which covers
 // printcolumn and rbac style markers from generators the registry was not built from.
-function markerSpans(comment: Node, spans: Span[], registry: MarkerRegistry | undefined): void {
-  const text = comment.text;
-  if (text.includes('\n')) return;
-  const base = comment.startPosition;
-  const at = (offset: number): Point => ({ row: base.row, column: base.column + offset });
-  const push = (kind: SpanKind, from: number, to: number) => {
-    if (to > from) spans.push({ kind, start: at(from), end: at(to) });
-  };
-
-  const plus = text.indexOf('+');
-  push('markerPrefix', plus, plus + 1);
-  const nameStart = plus + 1;
+export function parseMarker(text: string, registry?: MarkerRegistry): MarkerParts | null {
+  if (!MARKER.test(text) || BUILD_CONSTRAINT.test(text) || text.includes('\n')) return null;
+  const prefix = text.indexOf('+');
+  const nameStart = prefix + 1;
   let end = text.length;
   while (end > nameStart && /\s/.test(text[end - 1]!)) end--;
 
   const eq = text.indexOf('=', nameStart);
   if (eq < 0 || eq >= end) {
-    push('markerName', nameStart, end);
-    return;
+    return { prefix, name: [nameStart, end], nameText: text.slice(nameStart, end), arguments: [] };
   }
 
-  const args = splitTopLevel(text, eq + 1, end);
+  const pieces = splitTopLevel(text, eq + 1, end);
   let nameEnd = eq;
   let firstKeyStart = -1;
   const known = registry?.nameLength(text.slice(nameStart, end));
   if (known != null) {
     nameEnd = nameStart + known;
     if (nameEnd < eq) firstKeyStart = nameEnd + 1;
-  } else if (args.length >= 2 && args.slice(1).every((a) => keyOf(text, a) !== null)) {
+  } else if (pieces.length >= 2 && pieces.slice(1).every((a) => keyOf(text, a) !== null)) {
     const colon = text.lastIndexOf(':', eq);
     if (colon > nameStart) {
       nameEnd = colon;
       firstKeyStart = colon + 1;
     }
   }
-  push('markerName', nameStart, nameEnd);
 
-  if (firstKeyStart >= 0) push('markerArgument', firstKeyStart, eq);
-  push('markerValue', eq + 1, args[0]![1]);
-  for (const arg of args.slice(1)) {
-    const keyEnd = keyOf(text, arg);
-    if (keyEnd === null) {
-      push('markerValue', arg[0], arg[1]);
-      continue;
-    }
-    push('markerArgument', arg[0], keyEnd);
-    push('markerValue', keyEnd + 1, arg[1]);
+  const args: MarkerParts['arguments'] = [];
+  const first: Range = [eq + 1, pieces[0]![1]];
+  if (firstKeyStart >= 0) {
+    args.push({ key: [firstKeyStart, eq], keyText: text.slice(firstKeyStart, eq), value: first });
+  } else {
+    args.push({ value: first });
   }
+  for (const piece of pieces.slice(1)) {
+    const keyEnd = keyOf(text, piece);
+    if (keyEnd === null) {
+      args.push({ value: piece });
+    } else {
+      const key: Range = [piece[0], keyEnd];
+      args.push({ key, keyText: text.slice(...key), value: [keyEnd + 1, piece[1]] });
+    }
+  }
+  const nameText = text.slice(nameStart, nameEnd);
+  return { prefix, name: [nameStart, nameEnd], nameText, arguments: args };
 }
 
 // Comma-separated pieces of text[from, to), ignoring commas inside quotes, backticks or braces.
-function splitTopLevel(text: string, from: number, to: number): Array<[number, number]> {
-  const pieces: Array<[number, number]> = [];
+function splitTopLevel(text: string, from: number, to: number): Range[] {
+  const pieces: Range[] = [];
   let start = from;
   let depth = 0;
   let quote: string | null = null;
@@ -291,7 +319,7 @@ function splitTopLevel(text: string, from: number, to: number): Array<[number, n
 }
 
 // Index of the `=` if the piece is `identifier=...`, else null.
-function keyOf(text: string, [from, to]: [number, number]): number | null {
+function keyOf(text: string, [from, to]: Range): number | null {
   const match = /^[A-Za-z_][\w.-]*=/.exec(text.slice(from, to));
   return match ? from + match[0].length - 1 : null;
 }

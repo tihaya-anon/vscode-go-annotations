@@ -25,11 +25,13 @@ and docs in this repository are in English.
 src/analyze.ts        pure: tree-sitter syntax tree -> highlight spans (no vscode import)
 src/goParser.ts       loads web-tree-sitter and the Go grammar .wasm
 src/markers.ts        pure: marker registry parsed from `controller-gen <gen> -wwww` JSON
+src/markerHover.ts    pure: hover markdown for the marker or argument under the cursor
 src/controllerGen.ts  runs a controller-gen binary for its version and marker help
 src/controller-gen-markers.json  built-in registry, used until/unless a workspace one loads
 src/extension.ts      vscode glue: decoration types, debounce, per-document cache, registry loading
 test/analyze.test.ts  analyzer against test/fixtures/sample.go and the playground API types
 test/markers.test.ts  registry parsing and name splitting; live check against playground/bin
+test/markerHover.test.ts  hover text against the built-in registry
 test/bundle.test.ts   require()s dist/extension.cjs with a stub vscode module and activates it
 scripts/build.mjs     esbuild bundle + copies both .wasm files into dist/
 scripts/make-playground.sh  clones k8s-ai-platform into playground/ (gitignored)

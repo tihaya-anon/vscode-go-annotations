@@ -9,6 +9,7 @@ import { analyze, type SpanKind } from './analyze.ts';
 import builtinMarkers from './controller-gen-markers.json' with { type: 'json' };
 import { controllerGenHelp, controllerGenVersion } from './controllerGen.ts';
 import { createGoParser } from './goParser.ts';
+import { markerHover } from './markerHover.ts';
 import { MarkerRegistry } from './markers.ts';
 
 // Doc names and markers live inside comments: by default they keep the theme's comment colour and
@@ -37,6 +38,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   );
   const builtin = MarkerRegistry.fromHelp(builtinMarkers.categories);
   const painter = new Painter(parser, builtin);
+  let markers = builtin;
 
   // Painting starts with the built-in registry; the workspace's own controller-gen, which may be
   // a different version, replaces it once asked. The generation guards against a slow, stale
@@ -49,6 +51,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     if (registry === builtin) {
       log.info(`Using built-in markers from controller-gen ${builtinMarkers.version}`);
     }
+    markers = registry;
     painter.setRegistry(registry);
   };
 
@@ -62,6 +65,23 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     binWatcher.onDidChange(reloadMarkers),
     vscode.workspace.onDidGrantWorkspaceTrust(reloadMarkers),
     vscode.workspace.onDidChangeWorkspaceFolders(reloadMarkers),
+    vscode.languages.registerHoverProvider('go', {
+      provideHover(doc, pos) {
+        const config = vscode.workspace.getConfiguration('goAnnotations');
+        if (!config.get('markers.enabled', true)) return;
+        // controller-gen reads markers from whole-line comments only, so the line is the comment.
+        const line = doc.lineAt(pos.line).text;
+        const start = line.search(/\S/);
+        if (start < 0 || !line.startsWith('//', start)) return;
+        const hover = markerHover(line.slice(start), pos.character - start, markers);
+        if (!hover) return;
+        const [from, to] = hover.range;
+        return new vscode.Hover(
+          new vscode.MarkdownString(hover.markdown),
+          new vscode.Range(pos.line, start + from, pos.line, start + to),
+        );
+      },
+    }),
     vscode.window.onDidChangeVisibleTextEditors(() => painter.paintVisible()),
     vscode.workspace.onDidChangeTextDocument((e) => painter.schedule(e.document)),
     vscode.workspace.onDidCloseTextDocument((doc) => painter.forget(doc)),

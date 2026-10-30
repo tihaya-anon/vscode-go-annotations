@@ -114,7 +114,11 @@ Where the registry comes from:
 Uses:
 
 - exact name/argument splitting for highlighting (done);
-- hover documentation;
+- hover documentation (done): over `+` and the name, the marker (title in bold and its
+  qualifiers in italics rather than a hard-coded colour; targets sharing a description merged;
+  its arguments in `-ww` notation); over an argument's key or value, that argument. Only
+  whole-line `//` comments, which is where controller-gen reads markers. Highlighting and hover
+  share `parseMarker()` so they never disagree on where the name ends;
 - completion after `// +`;
 - diagnostics: unknown marker, missing required argument, wrong target (a `type` marker on a
   field), using the syntax tree the analyzer already has. `+kubebuilder:scaffold:*` (Kubebuilder

@@ -6,7 +6,8 @@ semantic highlighting:
 - struct tags: key, name and options in separate colours;
 - doc comments: the name being documented (`Dataset` in `// Dataset is ...`) in bold;
 - controller-gen / Kubebuilder markers such as `// +kubebuilder:validation:Minimum=1`: name in
-  bold, arguments in italics.
+  bold, arguments in italics. Hovering a marker shows controller-gen's documentation for it, or
+  for the argument under the cursor (type, required or optional).
 
 Doc names and markers are part of comments, so by default they keep the theme's comment colour
 and differ only in weight and style; struct tags get colours.

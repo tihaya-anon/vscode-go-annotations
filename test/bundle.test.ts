@@ -19,12 +19,27 @@ interface Workspace {
   config?: Record<string, unknown>;
   // Options of each decoration type created, in order.
   types?: Array<{ color?: { id: string }; fontWeight?: string; fontStyle?: string }>;
+  hover?: HoverProvider;
+}
+
+interface HoverProvider {
+  provideHover(
+    doc: unknown,
+    pos: { line: number; character: number },
+  ): { contents: { value: string }; range: { start: number[]; end: number[] } } | undefined;
 }
 
 function stubVscode(text: string, painted: Painted, ws: Workspace) {
   const noop = () => ({ dispose() {} });
   const log = (line: string) => ws.logs.push(line);
-  const document = { languageId: 'go', version: 1, uri: { toString: () => 'file:///sample.go' }, getText: () => text };
+  const lines = text.split('\n');
+  const document = {
+    languageId: 'go',
+    version: 1,
+    uri: { toString: () => 'file:///sample.go' },
+    getText: () => text,
+    lineAt: (line: number) => ({ text: lines[line] }),
+  };
   const editor = {
     document,
     setDecorations(type: { id: string }, ranges: Array<{ start: number[]; end: number[] }>) {
@@ -57,6 +72,26 @@ function stubVscode(text: string, painted: Painted, ws: Workspace) {
       createOutputChannel: () => ({ info: log, warn: log, show() {}, dispose() {} }),
     },
     commands: { registerCommand: noop },
+    languages: {
+      registerHoverProvider: (_selector: string, provider: HoverProvider) => {
+        ws.hover = provider;
+        return { dispose() {} };
+      },
+    },
+    Hover: class {
+      contents: unknown;
+      range: unknown;
+      constructor(contents: unknown, range: unknown) {
+        this.contents = contents;
+        this.range = range;
+      }
+    },
+    MarkdownString: class {
+      value: string;
+      constructor(value: string) {
+        this.value = value;
+      }
+    },
     workspace: {
       isTrusted: ws.trusted,
       workspaceFolders: ws.folders.map((fsPath) => ({ uri: { fsPath } })),
@@ -140,6 +175,25 @@ test('by default, comment decorations keep the comment colour', { skip: built },
     'goAnnotations.structTagOption',
   ]);
   assert.ok(ws.types!.some((t) => !t.color && t.fontWeight === 'bold'));
+});
+
+test('hover describes the marker under the cursor', { skip: built }, async () => {
+  const ws: Workspace = { trusted: false, folders: [root], logs: [] };
+  await activate(ws);
+  const lines = readFileSync(path.join(root, 'test/fixtures/sample.go'), 'utf8').split('\n');
+  const line = lines.findIndex((l) => l.startsWith('// +kubebuilder:resource:scope'));
+  const doc = { lineAt: (n: number) => ({ text: lines[n] }) };
+  const scope = ws.hover!.provideHover(doc, { line, character: lines[line]!.indexOf('scope') });
+  assert.match(scope!.contents.value, /^\*\*`\[scope=<string>\]`\*\* \*optional, of `\+kubebuilder:resource`\*/);
+  assert.deepEqual([scope!.range.start, scope!.range.end], [
+    [line, lines[line]!.indexOf('scope')],
+    [line, lines[line]!.length],
+  ]);
+  assert.equal(
+    ws.hover!.provideHover(doc, { line, character: 1 }),
+    undefined,
+    'the // is not part of the marker',
+  );
 });
 
 const playground = path.join(root, 'playground');
