@@ -1,7 +1,12 @@
 // Hover text for a controller-gen marker, from the registry. Pure: no vscode import; the
 // extension turns the result into a vscode.Hover.
 import { parseMarker, type Range } from './analyze.ts';
-import type { MarkerArgument, MarkerDefinition, MarkerRegistry } from './markers.ts';
+import {
+  argumentType,
+  type MarkerArgument,
+  type MarkerDefinition,
+  type MarkerRegistry,
+} from './markers.ts';
 
 export interface MarkerHover {
   markdown: string;
@@ -39,7 +44,7 @@ export function markerHover(
 
 // A name registered for several targets usually has the same text for each (listType on a field
 // and on a type); those are shown once with every target listed.
-function describeMarker(name: string, defs: MarkerDefinition[]): string {
+export function describeMarker(name: string, defs: MarkerDefinition[]): string {
   const groups = new Map<string, MarkerDefinition[]>();
   for (const def of defs) {
     const key = JSON.stringify([def.summary, def.details, def.deprecatedInFavorOf, def.arguments]);
@@ -47,7 +52,10 @@ function describeMarker(name: string, defs: MarkerDefinition[]): string {
   }
   const blocks = [...groups.values()].map((group) => {
     const def = group[0]!;
-    const targets = group.map((d) => d.target).sort().join(', ');
+    const targets = group
+      .map((d) => d.target)
+      .sort()
+      .join(', ');
     // The title in bold (code inherits the weight) and its qualifiers in italics, so the name
     // stands out without a colour that would have to be hard-coded here.
     const lines = [`**\`+${name}\`** *${targets} marker · ${def.category}*`];
@@ -64,7 +72,7 @@ function describeMarker(name: string, defs: MarkerDefinition[]): string {
   return blocks.join('\n\n---\n\n');
 }
 
-function describeArgument(marker: string, argument: MarkerArgument): string {
+export function describeArgument(marker: string, argument: MarkerArgument): string {
   const need = argument.optional ? 'optional' : 'required';
   const lines = [
     `**${signature(argument)}** *${need}, of \`+${marker}\`*`,
@@ -76,9 +84,7 @@ function describeArgument(marker: string, argument: MarkerArgument): string {
 // controller-gen's own -ww notation: `name=<type>`, `[name=<type>]` when optional, `=<type>` for
 // the anonymous value.
 function signature(argument: MarkerArgument): string {
-  const type =
-    argument.type === 'slice' ? `[]${argument.itemType ?? 'any'}` : argument.type || 'any';
-  const text = `${argument.name}=<${type}>`;
+  const text = `${argument.name}=<${argumentType(argument)}>`;
   return `\`${argument.optional ? `[${text}]` : text}\``;
 }
 

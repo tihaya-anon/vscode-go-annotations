@@ -4,7 +4,9 @@
 // Positions are tree-sitter Points. web-tree-sitter measures columns in UTF-16 code units, the same
 // unit as a vscode.Position character, so they map across without conversion.
 import type { Node, Point } from 'web-tree-sitter';
-import type { MarkerRegistry } from './markers.ts';
+
+export type { Point };
+import type { MarkerRegistry, MarkerTarget } from './markers.ts';
 
 export type SpanKind =
   | 'structTagKey'
@@ -39,6 +41,19 @@ export interface DocIssue {
 export interface Analysis {
   spans: Span[];
   docIssues: DocIssue[];
+  // Every marker comment, with what controller-gen attaches it to.
+  markers: MarkerSite[];
+  // Comment row -> what a marker on that row may attach to, in order of preference; absent where
+  // controller-gen does not read markers.
+  targets: Map<number, MarkerTarget[]>;
+}
+
+export interface MarkerSite {
+  // Where the comment starts; MarkerParts offsets are relative to it.
+  start: Point;
+  parts: MarkerParts;
+  // What the marker may attach to, in order of preference; empty where controller-gen ignores it.
+  targets: MarkerTarget[];
 }
 
 export interface AnalyzeOptions {
@@ -79,6 +94,8 @@ const BUILD_CONSTRAINT = /^\/\/\s*\+build(\s|$)/;
 export function analyze(root: Node, options: AnalyzeOptions): Analysis {
   const spans: Span[] = [];
   const docIssues: DocIssue[] = [];
+  const markers: MarkerSite[] = [];
+  const targets = markerTargets(root);
   // Doc comment id -> the names it may mention.
   const docComments = new Map<number, string[]>();
 
@@ -107,12 +124,102 @@ export function analyze(root: Node, options: AnalyzeOptions): Analysis {
       const marker = options.markers ? parseMarker(node.text, options.registry) : null;
       if (marker) {
         markerSpans(node, marker, spans);
+        const at = targets.get(node.startPosition.row) ?? [];
+        markers.push({ start: node.startPosition, parts: marker, targets: at });
       } else if (docComments.has(node.id) && !DIRECTIVE.test(node.text)) {
         docNameSpans(node, docComments.get(node.id)!, spans);
       }
     }
   });
-  return { spans, docIssues };
+  return { spans, docIssues, markers, targets };
+}
+
+// What controller-gen attaches each comment's markers to, mirroring controller-tools
+// pkg/markers/collect.go. Before each declaration it reads two comment groups: the doc comment
+// (the group ending on the line above) and the closest group before that, separated by a blank
+// line. A field takes both. A type takes both too, but a marker in the closest group that is a
+// package marker and not a type marker goes to the package -- that is how the +kubebuilder:webhook
+// line Kubebuilder scaffolds above a defaulter type works. A top-level declaration of any other
+// kind hands the closest group to the package and drops its doc, so markers inside a function's
+// doc comment are ignored. Other groups at top level, those above `package` and those after the
+// last declaration belong to the package. Trailing comments and comments anywhere else (function
+// bodies, a third group above a field) are ignored.
+//
+// Each comment row maps to the targets to try, in order; a row that is absent is ignored.
+function markerTargets(root: Node): Map<number, MarkerTarget[]> {
+  const targets = new Map<number, MarkerTarget[]>();
+  const assign = (groups: Node[][], to: MarkerTarget[]) => {
+    for (const group of groups) for (const c of group) targets.set(c.startPosition.row, to);
+  };
+  const isGroup = (node: Node) => node.children.some((c) => c.type === '(');
+
+  // `kind` says how a non-comment child takes its doc and closest groups; other groups before
+  // it go to `rest`. Returns the comments left after the last child.
+  const scan = (
+    parent: Node,
+    kind: (node: Node) => { doc: MarkerTarget[]; closest: MarkerTarget[] } | null,
+    rest: MarkerTarget[],
+  ): Node[] => {
+    let pending: Node[] = [];
+    let previous: Node | null = null;
+    for (const child of parent.children) {
+      if (child.type === 'comment') {
+        // A comment on the line where the previous code ends is that code's trailing comment.
+        if (previous?.endPosition.row !== child.startPosition.row) pending.push(child);
+        continue;
+      }
+      const how = kind(child);
+      if (how) {
+        const groups = commentGroups(pending);
+        const last = groups.at(-1);
+        const adjacent = last && last.at(-1)!.endPosition.row === child.startPosition.row - 1;
+        const doc = adjacent ? last : undefined;
+        const before = doc ? groups.slice(0, -1) : groups;
+        const closest = before.at(-1);
+        if (doc) assign([doc], how.doc);
+        if (closest) assign([closest], how.closest);
+        assign(before.slice(0, -1), rest);
+      }
+      pending = [];
+      previous = child;
+    }
+    return pending;
+  };
+
+  const TYPE = { doc: ['type'], closest: ['type', 'package'] } satisfies Record<
+    string,
+    MarkerTarget[]
+  >;
+  const FIELD = { doc: ['field'], closest: ['field'] } satisfies Record<string, MarkerTarget[]>;
+  const trailing = scan(
+    root,
+    (node) => {
+      if (node.type === 'package_clause') return { doc: ['package'], closest: ['package'] };
+      if (node.type === 'type_declaration' && !isGroup(node)) return TYPE;
+      return { doc: [], closest: ['package'] };
+    },
+    ['package'],
+  );
+  assign(commentGroups(trailing), ['package']);
+  walk(root, (node) => {
+    if (node.type === 'type_declaration' && isGroup(node)) {
+      scan(node, (c) => (c.type === 'type_spec' || c.type === 'type_alias' ? TYPE : null), []);
+    } else if (node.type === 'field_declaration_list' || node.type === 'interface_type') {
+      scan(node, (c) => (c.type === '{' || c.type === '}' ? null : FIELD), []);
+    }
+  });
+  return targets;
+}
+
+// go/ast comment groups: comments on consecutive lines, no blank line between.
+function commentGroups(comments: Node[]): Node[][] {
+  const groups: Node[][] = [];
+  for (const c of comments) {
+    const group = groups.at(-1);
+    if (group && group.at(-1)!.endPosition.row === c.startPosition.row - 1) group.push(c);
+    else groups.push([c]);
+  }
+  return groups;
 }
 
 // Pre-order, and a declaration is visited before the comments that follow it, but its doc
@@ -312,6 +419,8 @@ function markerSpans(comment: Node, marker: MarkerParts, spans: Span[]): void {
 export type Range = [number, number];
 
 export interface MarkerParts {
+  // The comment text the offsets point into.
+  text: string;
   // Offset of the `+`.
   prefix: number;
   name: Range;
@@ -338,7 +447,8 @@ export function parseMarker(text: string, registry?: MarkerRegistry): MarkerPart
 
   const eq = text.indexOf('=', nameStart);
   if (eq < 0 || eq >= end) {
-    return { prefix, name: [nameStart, end], nameText: text.slice(nameStart, end), arguments: [] };
+    const nameText = text.slice(nameStart, end);
+    return { text, prefix, name: [nameStart, end], nameText, arguments: [] };
   }
 
   const pieces = splitTopLevel(text, eq + 1, end);
@@ -373,11 +483,11 @@ export function parseMarker(text: string, registry?: MarkerRegistry): MarkerPart
     }
   }
   const nameText = text.slice(nameStart, nameEnd);
-  return { prefix, name: [nameStart, nameEnd], nameText, arguments: args };
+  return { text, prefix, name: [nameStart, nameEnd], nameText, arguments: args };
 }
 
 // Comma-separated pieces of text[from, to), ignoring commas inside quotes, backticks or braces.
-function splitTopLevel(text: string, from: number, to: number): Range[] {
+export function splitTopLevel(text: string, from: number, to: number): Range[] {
   const pieces: Range[] = [];
   let start = from;
   let depth = 0;
@@ -400,7 +510,7 @@ function splitTopLevel(text: string, from: number, to: number): Range[] {
 }
 
 // Index of the `=` if the piece is `identifier=...`, else null.
-function keyOf(text: string, [from, to]: Range): number | null {
+export function keyOf(text: string, [from, to]: Range): number | null {
   const match = /^[A-Za-z_][\w.-]*=/.exec(text.slice(from, to));
   return match ? from + match[0].length - 1 : null;
 }

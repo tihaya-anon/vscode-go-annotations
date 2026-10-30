@@ -254,14 +254,14 @@
    "markers": [
     {
      "name": "kubebuilder:pruning:PreserveUnknownFields",
-     "target": "type",
+     "target": "field",
      "summary": "PreserveUnknownFields stops the apiserver from pruning fields which are not specified.",
      "details": "By default the apiserver drops unknown fields from the request payload\nduring the decoding step. This marker stops the API server from doing so.\nIt affects fields recursively, but switches back to normal pruning behaviour\nif nested  properties or additionalProperties are specified in the schema.\nThis can either be true or undefined. False\nis forbidden.\n\nNB: The kubebuilder:validation:XPreserveUnknownFields variant is deprecated\nin favor of the kubebuilder:pruning:PreserveUnknownFields variant.  They function\nidentically.",
      "category": "CRD processing"
     },
     {
      "name": "kubebuilder:pruning:PreserveUnknownFields",
-     "target": "field",
+     "target": "type",
      "summary": "PreserveUnknownFields stops the apiserver from pruning fields which are not specified.",
      "details": "By default the apiserver drops unknown fields from the request payload\nduring the decoding step. This marker stops the API server from doing so.\nIt affects fields recursively, but switches back to normal pruning behaviour\nif nested  properties or additionalProperties are specified in the schema.\nThis can either be true or undefined. False\nis forbidden.\n\nNB: The kubebuilder:validation:XPreserveUnknownFields variant is deprecated\nin favor of the kubebuilder:pruning:PreserveUnknownFields variant.  They function\nidentically.",
      "category": "CRD processing"
@@ -588,7 +588,7 @@
     },
     {
      "name": "kubebuilder:validation:ExclusiveMinimum",
-     "target": "field",
+     "target": "type",
      "summary": "indicates that the minimum is \"up to\" but not including that value.",
      "category": "CRD validation",
      "fields": [
@@ -602,7 +602,7 @@
     },
     {
      "name": "kubebuilder:validation:ExclusiveMinimum",
-     "target": "type",
+     "target": "field",
      "summary": "indicates that the minimum is \"up to\" but not including that value.",
      "category": "CRD validation",
      "fields": [
@@ -616,7 +616,7 @@
     },
     {
      "name": "kubebuilder:validation:Format",
-     "target": "type",
+     "target": "field",
      "summary": "specifies additional \"complex\" formatting for this field.",
      "details": "For example, a date-time field would be marked as \"type: string\" and\n\"format: date-time\".",
      "category": "CRD validation",
@@ -631,7 +631,7 @@
     },
     {
      "name": "kubebuilder:validation:Format",
-     "target": "field",
+     "target": "type",
      "summary": "specifies additional \"complex\" formatting for this field.",
      "details": "For example, a date-time field would be marked as \"type: string\" and\n\"format: date-time\".",
      "category": "CRD validation",
@@ -702,7 +702,7 @@
     },
     {
      "name": "kubebuilder:validation:MaxProperties",
-     "target": "field",
+     "target": "type",
      "summary": "restricts the number of keys in an object",
      "category": "CRD validation",
      "fields": [
@@ -716,7 +716,7 @@
     },
     {
      "name": "kubebuilder:validation:MaxProperties",
-     "target": "type",
+     "target": "field",
      "summary": "restricts the number of keys in an object",
      "category": "CRD validation",
      "fields": [
@@ -730,7 +730,7 @@
     },
     {
      "name": "kubebuilder:validation:Maximum",
-     "target": "field",
+     "target": "type",
      "summary": "specifies the maximum numeric value that this field can have.",
      "category": "CRD validation",
      "fields": [
@@ -744,7 +744,7 @@
     },
     {
      "name": "kubebuilder:validation:Maximum",
-     "target": "type",
+     "target": "field",
      "summary": "specifies the maximum numeric value that this field can have.",
      "category": "CRD validation",
      "fields": [
@@ -957,7 +957,7 @@
     },
     {
      "name": "kubebuilder:validation:Type",
-     "target": "type",
+     "target": "field",
      "summary": "overrides the type for this field (which defaults to the equivalent of the Go type).",
      "details": "This generally must be paired with custom serialization.  For example, the\nmetav1.Time field would be marked as \"type: string\" and \"format: date-time\".",
      "category": "CRD validation",
@@ -972,7 +972,7 @@
     },
     {
      "name": "kubebuilder:validation:Type",
-     "target": "field",
+     "target": "type",
      "summary": "overrides the type for this field (which defaults to the equivalent of the Go type).",
      "details": "This generally must be paired with custom serialization.  For example, the\nmetav1.Time field would be marked as \"type: string\" and \"format: date-time\".",
      "category": "CRD validation",
@@ -1015,35 +1015,35 @@
     },
     {
      "name": "kubebuilder:validation:XEmbeddedResource",
-     "target": "type",
+     "target": "field",
      "summary": "EmbeddedResource marks a fields as an embedded resource with apiVersion, kind and metadata fields.",
      "details": "An embedded resource is a value that has apiVersion, kind and metadata fields.\nThey are validated implicitly according to the semantics of the currently\nrunning apiserver. It is not necessary to add any additional schema for these\nfield, yet it is possible. This can be combined with PreserveUnknownFields.",
      "category": "CRD validation"
     },
     {
      "name": "kubebuilder:validation:XEmbeddedResource",
-     "target": "field",
+     "target": "type",
      "summary": "EmbeddedResource marks a fields as an embedded resource with apiVersion, kind and metadata fields.",
      "details": "An embedded resource is a value that has apiVersion, kind and metadata fields.\nThey are validated implicitly according to the semantics of the currently\nrunning apiserver. It is not necessary to add any additional schema for these\nfield, yet it is possible. This can be combined with PreserveUnknownFields.",
      "category": "CRD validation"
     },
     {
      "name": "kubebuilder:validation:XIntOrString",
-     "target": "field",
+     "target": "type",
      "summary": "IntOrString marks a fields as an IntOrString.",
      "details": "This is required when applying patterns or other validations to an IntOrString\nfield. Known information about the type is applied during the collapse phase\nand as such is not normally available during marker application.",
      "category": "CRD validation"
     },
     {
      "name": "kubebuilder:validation:XIntOrString",
-     "target": "type",
+     "target": "field",
      "summary": "IntOrString marks a fields as an IntOrString.",
      "details": "This is required when applying patterns or other validations to an IntOrString\nfield. Known information about the type is applied during the collapse phase\nand as such is not normally available during marker application.",
      "category": "CRD validation"
     },
     {
      "name": "kubebuilder:validation:XValidation",
-     "target": "type",
+     "target": "field",
      "summary": "marks a field as requiring a value for which a given",
      "details": "expression evaluates to true.\n\nThis marker may be repeated to specify multiple expressions, all of\nwhich must evaluate to true.",
      "category": "CRD validation",
@@ -1088,7 +1088,7 @@
     },
     {
      "name": "kubebuilder:validation:XValidation",
-     "target": "field",
+     "target": "type",
      "summary": "marks a field as requiring a value for which a given",
      "details": "expression evaluates to true.\n\nThis marker may be repeated to specify multiple expressions, all of\nwhich must evaluate to true.",
      "category": "CRD validation",
@@ -1133,7 +1133,7 @@
     },
     {
      "name": "kubebuilder:validation:items:Enum",
-     "target": "type",
+     "target": "field",
      "summary": "for array items specifies that this (scalar) field is restricted to the *exact* values specified here.",
      "category": "CRD validation",
      "fields": [
@@ -1151,7 +1151,7 @@
     },
     {
      "name": "kubebuilder:validation:items:Enum",
-     "target": "field",
+     "target": "type",
      "summary": "for array items specifies that this (scalar) field is restricted to the *exact* values specified here.",
      "category": "CRD validation",
      "fields": [
@@ -1255,7 +1255,7 @@
     },
     {
      "name": "kubebuilder:validation:items:MaxItems",
-     "target": "type",
+     "target": "field",
      "summary": "for array items specifies the maximum length for this list.",
      "category": "CRD validation",
      "fields": [
@@ -1269,7 +1269,7 @@
     },
     {
      "name": "kubebuilder:validation:items:MaxItems",
-     "target": "field",
+     "target": "type",
      "summary": "for array items specifies the maximum length for this list.",
      "category": "CRD validation",
      "fields": [
@@ -1283,7 +1283,7 @@
     },
     {
      "name": "kubebuilder:validation:items:MaxLength",
-     "target": "type",
+     "target": "field",
      "summary": "for array items specifies the maximum length for this string.",
      "category": "CRD validation",
      "fields": [
@@ -1297,7 +1297,7 @@
     },
     {
      "name": "kubebuilder:validation:items:MaxLength",
-     "target": "field",
+     "target": "type",
      "summary": "for array items specifies the maximum length for this string.",
      "category": "CRD validation",
      "fields": [
@@ -1311,7 +1311,7 @@
     },
     {
      "name": "kubebuilder:validation:items:MaxProperties",
-     "target": "field",
+     "target": "type",
      "summary": "for array items restricts the number of keys in an object",
      "category": "CRD validation",
      "fields": [
@@ -1325,7 +1325,7 @@
     },
     {
      "name": "kubebuilder:validation:items:MaxProperties",
-     "target": "type",
+     "target": "field",
      "summary": "for array items restricts the number of keys in an object",
      "category": "CRD validation",
      "fields": [
@@ -1367,7 +1367,7 @@
     },
     {
      "name": "kubebuilder:validation:items:MinItems",
-     "target": "field",
+     "target": "type",
      "summary": "for array items specifies the minimum length for this list.",
      "category": "CRD validation",
      "fields": [
@@ -1381,7 +1381,7 @@
     },
     {
      "name": "kubebuilder:validation:items:MinItems",
-     "target": "type",
+     "target": "field",
      "summary": "for array items specifies the minimum length for this list.",
      "category": "CRD validation",
      "fields": [
@@ -1395,7 +1395,7 @@
     },
     {
      "name": "kubebuilder:validation:items:MinLength",
-     "target": "field",
+     "target": "type",
      "summary": "for array items specifies the minimum length for this string.",
      "category": "CRD validation",
      "fields": [
@@ -1409,7 +1409,7 @@
     },
     {
      "name": "kubebuilder:validation:items:MinLength",
-     "target": "type",
+     "target": "field",
      "summary": "for array items specifies the minimum length for this string.",
      "category": "CRD validation",
      "fields": [
@@ -1451,7 +1451,7 @@
     },
     {
      "name": "kubebuilder:validation:items:Minimum",
-     "target": "field",
+     "target": "type",
      "summary": "for array items specifies the minimum numeric value that this field can have. Negative numbers are supported.",
      "category": "CRD validation",
      "fields": [
@@ -1465,7 +1465,7 @@
     },
     {
      "name": "kubebuilder:validation:items:Minimum",
-     "target": "type",
+     "target": "field",
      "summary": "for array items specifies the minimum numeric value that this field can have. Negative numbers are supported.",
      "category": "CRD validation",
      "fields": [
@@ -1479,7 +1479,7 @@
     },
     {
      "name": "kubebuilder:validation:items:MultipleOf",
-     "target": "type",
+     "target": "field",
      "summary": "for array items specifies that this field must have a numeric value that's a multiple of this one.",
      "category": "CRD validation",
      "fields": [
@@ -1493,7 +1493,7 @@
     },
     {
      "name": "kubebuilder:validation:items:MultipleOf",
-     "target": "field",
+     "target": "type",
      "summary": "for array items specifies that this field must have a numeric value that's a multiple of this one.",
      "category": "CRD validation",
      "fields": [
@@ -1507,7 +1507,7 @@
     },
     {
      "name": "kubebuilder:validation:items:Pattern",
-     "target": "field",
+     "target": "type",
      "summary": "for array items specifies that this string must match the given regular expression.",
      "category": "CRD validation",
      "fields": [
@@ -1521,7 +1521,7 @@
     },
     {
      "name": "kubebuilder:validation:items:Pattern",
-     "target": "type",
+     "target": "field",
      "summary": "for array items specifies that this string must match the given regular expression.",
      "category": "CRD validation",
      "fields": [
@@ -1607,21 +1607,21 @@
     },
     {
      "name": "kubebuilder:validation:items:XIntOrString",
-     "target": "type",
+     "target": "field",
      "summary": "for array items IntOrString marks a fields as an IntOrString.",
      "details": "This is required when applying patterns or other validations to an IntOrString\nfield. Known information about the type is applied during the collapse phase\nand as such is not normally available during marker application.",
      "category": "CRD validation"
     },
     {
      "name": "kubebuilder:validation:items:XIntOrString",
-     "target": "field",
+     "target": "type",
      "summary": "for array items IntOrString marks a fields as an IntOrString.",
      "details": "This is required when applying patterns or other validations to an IntOrString\nfield. Known information about the type is applied during the collapse phase\nand as such is not normally available during marker application.",
      "category": "CRD validation"
     },
     {
      "name": "kubebuilder:validation:items:XValidation",
-     "target": "type",
+     "target": "field",
      "summary": "for array items marks a field as requiring a value for which a given",
      "details": "expression evaluates to true.\n\nThis marker may be repeated to specify multiple expressions, all of\nwhich must evaluate to true.",
      "category": "CRD validation",
@@ -1666,7 +1666,7 @@
     },
     {
      "name": "kubebuilder:validation:items:XValidation",
-     "target": "field",
+     "target": "type",
      "summary": "for array items marks a field as requiring a value for which a given",
      "details": "expression evaluates to true.\n\nThis marker may be repeated to specify multiple expressions, all of\nwhich must evaluate to true.",
      "category": "CRD validation",
@@ -2065,6 +2065,1782 @@
       {
        "name": "",
        "type": "bool",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "category": "CRD",
+   "markers": [
+    {
+     "name": "groupName",
+     "target": "package",
+     "summary": "specifies the API group name for this package.",
+     "category": "CRD",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": true,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:deprecatedversion",
+     "target": "type",
+     "summary": "marks this version as deprecated.",
+     "category": "CRD",
+     "fields": [
+      {
+       "name": "warning",
+       "type": "string",
+       "optional": true,
+       "summary": "message to be shown on the deprecated version"
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:metadata",
+     "target": "type",
+     "summary": "configures the additional annotations or labels for this CRD.",
+     "details": "For example adding annotation \"api-approved.kubernetes.io\" for a CRD with Kubernetes groups,\nor annotation \"cert-manager.io/inject-ca-from-secret\" for a CRD that needs CA injection.",
+     "category": "CRD",
+     "fields": [
+      {
+       "name": "annotations",
+       "type": "slice",
+       "optional": true,
+       "itemType": {
+        "type": "string",
+        "optional": false
+       },
+       "summary": "will be added into the annotations of this CRD."
+      },
+      {
+       "name": "labels",
+       "type": "slice",
+       "optional": true,
+       "itemType": {
+        "type": "string",
+        "optional": false
+       },
+       "summary": "will be added into the labels of this CRD."
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:printcolumn",
+     "target": "type",
+     "summary": "adds a column to \"kubectl get\" output for this CRD.",
+     "category": "CRD",
+     "fields": [
+      {
+       "name": "JSONPath",
+       "type": "string",
+       "optional": false,
+       "summary": "specifies the jsonpath expression used to extract the value of the column."
+      },
+      {
+       "name": "description",
+       "type": "string",
+       "optional": true,
+       "summary": "specifies the help/description for this column."
+      },
+      {
+       "name": "format",
+       "type": "string",
+       "optional": true,
+       "summary": "specifies the format of the column.",
+       "details": "It may be any OpenAPI data format corresponding to the type, listed at\nhttps://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#data-types."
+      },
+      {
+       "name": "name",
+       "type": "string",
+       "optional": false,
+       "summary": "specifies the name of the column."
+      },
+      {
+       "name": "priority",
+       "type": "int",
+       "optional": true,
+       "summary": "indicates how important it is that this column be displayed.",
+       "details": "Lower priority (*higher* numbered) columns will be hidden if the terminal\nwidth is too small."
+      },
+      {
+       "name": "type",
+       "type": "string",
+       "optional": false,
+       "summary": "indicates the type of the column.",
+       "details": "It may be any OpenAPI data type listed at\nhttps://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#data-types."
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:resource",
+     "target": "type",
+     "summary": "configures naming and scope for a CRD.",
+     "category": "CRD",
+     "fields": [
+      {
+       "name": "categories",
+       "type": "slice",
+       "optional": true,
+       "itemType": {
+        "type": "string",
+        "optional": false
+       },
+       "summary": "specifies which group aliases this resource is part of.",
+       "details": "Group aliases are used to work with groups of resources at once.\nThe most common one is \"all\" which covers about a third of the base\nresources in Kubernetes, and is generally used for \"user-facing\" resources."
+      },
+      {
+       "name": "path",
+       "type": "string",
+       "optional": true,
+       "summary": "specifies the plural \"resource\" for this CRD.",
+       "details": "It generally corresponds to a plural, lower-cased version of the Kind.\nSee https://book.kubebuilder.io/cronjob-tutorial/gvks.html."
+      },
+      {
+       "name": "scope",
+       "type": "string",
+       "optional": true,
+       "summary": "overrides the scope of the CRD (Cluster vs Namespaced).",
+       "details": "Scope defaults to \"Namespaced\".  Cluster-scoped (\"Cluster\") resources\ndon't exist in namespaces."
+      },
+      {
+       "name": "shortName",
+       "type": "slice",
+       "optional": true,
+       "itemType": {
+        "type": "string",
+        "optional": false
+       },
+       "summary": "specifies aliases for this CRD.",
+       "details": "Short names are often used when people have work with your resource\nover and over again.  For instance, \"rs\" for \"replicaset\" or\n\"crd\" for customresourcedefinition."
+      },
+      {
+       "name": "singular",
+       "type": "string",
+       "optional": true,
+       "summary": "overrides the singular form of your resource.",
+       "details": "The singular form is otherwise defaulted off the plural (path)."
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:selectablefield",
+     "target": "type",
+     "summary": "adds a field that may be used with field selectors.",
+     "category": "CRD",
+     "fields": [
+      {
+       "name": "JSONPath",
+       "type": "string",
+       "optional": false,
+       "summary": "specifies the jsonpath expression which is used to produce a field selector value."
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:skip",
+     "target": "package",
+     "summary": "don't consider this package as an API version.",
+     "category": "CRD"
+    },
+    {
+     "name": "kubebuilder:skipversion",
+     "target": "type",
+     "summary": "removes the particular version of the CRD from the CRDs spec.",
+     "details": "This is useful if you need to skip generating and listing version entries\nfor 'internal' resource versions, which typically exist if using the\nKubernetes upstream conversion-gen tool.",
+     "category": "CRD"
+    },
+    {
+     "name": "kubebuilder:storageversion",
+     "target": "type",
+     "summary": "marks this version as the \"storage version\" for the CRD for conversion.",
+     "details": "When conversion is enabled for a CRD (i.e. it's not a trivial-versions/single-version CRD),\none version is set as the \"storage version\" to be stored in etcd.  Attempting to store any\nother version will result in conversion to the storage version via a conversion webhook.",
+     "category": "CRD"
+    },
+    {
+     "name": "kubebuilder:subresource:scale",
+     "target": "type",
+     "summary": "enables the \"/scale\" subresource on a CRD.",
+     "category": "CRD",
+     "fields": [
+      {
+       "name": "selectorpath",
+       "type": "string",
+       "optional": true,
+       "summary": "specifies the jsonpath to the pod label selector field for the scale's status.",
+       "details": "The selector field must be the *string* form (serialized form) of a selector.\nSetting a pod label selector is necessary for your type to work with the HorizontalPodAutoscaler."
+      },
+      {
+       "name": "specpath",
+       "type": "string",
+       "optional": false,
+       "summary": "specifies the jsonpath to the replicas field for the scale's spec."
+      },
+      {
+       "name": "statuspath",
+       "type": "string",
+       "optional": false,
+       "summary": "specifies the jsonpath to the replicas field for the scale's status."
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:subresource:status",
+     "target": "type",
+     "summary": "enables the \"/status\" subresource on a CRD.",
+     "category": "CRD"
+    },
+    {
+     "name": "kubebuilder:unservedversion",
+     "target": "type",
+     "summary": "does not serve this version.",
+     "details": "This is useful if you need to drop support for a version in favor of a newer version.",
+     "category": "CRD"
+    },
+    {
+     "name": "versionName",
+     "target": "package",
+     "summary": "overrides the API group version for this package (defaults to the package name).",
+     "category": "CRD",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "category": "CRD processing",
+   "markers": [
+    {
+     "name": "kubebuilder:pruning:PreserveUnknownFields",
+     "target": "field",
+     "summary": "PreserveUnknownFields stops the apiserver from pruning fields which are not specified.",
+     "details": "By default the apiserver drops unknown fields from the request payload\nduring the decoding step. This marker stops the API server from doing so.\nIt affects fields recursively, but switches back to normal pruning behaviour\nif nested  properties or additionalProperties are specified in the schema.\nThis can either be true or undefined. False\nis forbidden.\n\nNB: The kubebuilder:validation:XPreserveUnknownFields variant is deprecated\nin favor of the kubebuilder:pruning:PreserveUnknownFields variant.  They function\nidentically.",
+     "category": "CRD processing"
+    },
+    {
+     "name": "kubebuilder:pruning:PreserveUnknownFields",
+     "target": "type",
+     "summary": "PreserveUnknownFields stops the apiserver from pruning fields which are not specified.",
+     "details": "By default the apiserver drops unknown fields from the request payload\nduring the decoding step. This marker stops the API server from doing so.\nIt affects fields recursively, but switches back to normal pruning behaviour\nif nested  properties or additionalProperties are specified in the schema.\nThis can either be true or undefined. False\nis forbidden.\n\nNB: The kubebuilder:validation:XPreserveUnknownFields variant is deprecated\nin favor of the kubebuilder:pruning:PreserveUnknownFields variant.  They function\nidentically.",
+     "category": "CRD processing"
+    },
+    {
+     "name": "kubebuilder:validation:XPreserveUnknownFields",
+     "target": "type",
+     "summary": "PreserveUnknownFields stops the apiserver from pruning fields which are not specified.",
+     "details": "By default the apiserver drops unknown fields from the request payload\nduring the decoding step. This marker stops the API server from doing so.\nIt affects fields recursively, but switches back to normal pruning behaviour\nif nested  properties or additionalProperties are specified in the schema.\nThis can either be true or undefined. False\nis forbidden.\n\nNB: The kubebuilder:validation:XPreserveUnknownFields variant is deprecated\nin favor of the kubebuilder:pruning:PreserveUnknownFields variant.  They function\nidentically.",
+     "category": "CRD processing"
+    },
+    {
+     "name": "kubebuilder:validation:XPreserveUnknownFields",
+     "target": "field",
+     "summary": "PreserveUnknownFields stops the apiserver from pruning fields which are not specified.",
+     "details": "By default the apiserver drops unknown fields from the request payload\nduring the decoding step. This marker stops the API server from doing so.\nIt affects fields recursively, but switches back to normal pruning behaviour\nif nested  properties or additionalProperties are specified in the schema.\nThis can either be true or undefined. False\nis forbidden.\n\nNB: The kubebuilder:validation:XPreserveUnknownFields variant is deprecated\nin favor of the kubebuilder:pruning:PreserveUnknownFields variant.  They function\nidentically.",
+     "category": "CRD processing"
+    },
+    {
+     "name": "kubebuilder:validation:items:XPreserveUnknownFields",
+     "target": "type",
+     "summary": "for array items PreserveUnknownFields stops the apiserver from pruning fields which are not specified.",
+     "details": "By default the apiserver drops unknown fields from the request payload\nduring the decoding step. This marker stops the API server from doing so.\nIt affects fields recursively, but switches back to normal pruning behaviour\nif nested  properties or additionalProperties are specified in the schema.\nThis can either be true or undefined. False\nis forbidden.\n\nNB: The kubebuilder:validation:XPreserveUnknownFields variant is deprecated\nin favor of the kubebuilder:pruning:PreserveUnknownFields variant.  They function\nidentically.",
+     "category": "CRD processing"
+    },
+    {
+     "name": "kubebuilder:validation:items:XPreserveUnknownFields",
+     "target": "field",
+     "summary": "for array items PreserveUnknownFields stops the apiserver from pruning fields which are not specified.",
+     "details": "By default the apiserver drops unknown fields from the request payload\nduring the decoding step. This marker stops the API server from doing so.\nIt affects fields recursively, but switches back to normal pruning behaviour\nif nested  properties or additionalProperties are specified in the schema.\nThis can either be true or undefined. False\nis forbidden.\n\nNB: The kubebuilder:validation:XPreserveUnknownFields variant is deprecated\nin favor of the kubebuilder:pruning:PreserveUnknownFields variant.  They function\nidentically.",
+     "category": "CRD processing"
+    },
+    {
+     "name": "listMapKey",
+     "target": "type",
+     "summary": "specifies the keys to map listTypes.",
+     "details": "It indicates the index of a map list. They can be repeated if multiple keys\nmust be used. It can only be used when ListType is set to map, and the keys\nshould be scalar types.",
+     "category": "CRD processing",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "listMapKey",
+     "target": "field",
+     "summary": "specifies the keys to map listTypes.",
+     "details": "It indicates the index of a map list. They can be repeated if multiple keys\nmust be used. It can only be used when ListType is set to map, and the keys\nshould be scalar types.",
+     "category": "CRD processing",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "listType",
+     "target": "type",
+     "summary": "specifies the type of data-structure that the list",
+     "details": "represents (map, set, atomic).\n\nPossible data-structure types of a list are:\n\n  - \"map\": it needs to have a key field, which will be used to build an\n    associative list. A typical example is a the pod container list,\n    which is indexed by the container name.\n\n  - \"set\": Fields need to be \"scalar\", and there can be only one\n    occurrence of each.\n\n  - \"atomic\": All the fields in the list are treated as a single value,\n    are typically manipulated together by the same actor.",
+     "category": "CRD processing",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "listType",
+     "target": "field",
+     "summary": "specifies the type of data-structure that the list",
+     "details": "represents (map, set, atomic).\n\nPossible data-structure types of a list are:\n\n  - \"map\": it needs to have a key field, which will be used to build an\n    associative list. A typical example is a the pod container list,\n    which is indexed by the container name.\n\n  - \"set\": Fields need to be \"scalar\", and there can be only one\n    occurrence of each.\n\n  - \"atomic\": All the fields in the list are treated as a single value,\n    are typically manipulated together by the same actor.",
+     "category": "CRD processing",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "mapType",
+     "target": "field",
+     "summary": "specifies the level of atomicity of the map;",
+     "details": "i.e. whether each item in the map is independent of the others,\nor all fields are treated as a single unit.\n\nPossible values:\n\n  - \"granular\": items in the map are independent of each other,\n    and can be manipulated by different actors.\n    This is the default behavior.\n\n  - \"atomic\": all fields are treated as one unit.\n    Any changes have to replace the entire map.",
+     "category": "CRD processing",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "mapType",
+     "target": "type",
+     "summary": "specifies the level of atomicity of the map;",
+     "details": "i.e. whether each item in the map is independent of the others,\nor all fields are treated as a single unit.\n\nPossible values:\n\n  - \"granular\": items in the map are independent of each other,\n    and can be manipulated by different actors.\n    This is the default behavior.\n\n  - \"atomic\": all fields are treated as one unit.\n    Any changes have to replace the entire map.",
+     "category": "CRD processing",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "structType",
+     "target": "field",
+     "summary": "specifies the level of atomicity of the struct;",
+     "details": "i.e. whether each field in the struct is independent of the others,\nor all fields are treated as a single unit.\n\nPossible values:\n\n  - \"granular\": fields in the struct are independent of each other,\n    and can be manipulated by different actors.\n    This is the default behavior.\n\n  - \"atomic\": all fields are treated as one unit.\n    Any changes have to replace the entire struct.",
+     "category": "CRD processing",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "structType",
+     "target": "type",
+     "summary": "specifies the level of atomicity of the struct;",
+     "details": "i.e. whether each field in the struct is independent of the others,\nor all fields are treated as a single unit.\n\nPossible values:\n\n  - \"granular\": fields in the struct are independent of each other,\n    and can be manipulated by different actors.\n    This is the default behavior.\n\n  - \"atomic\": all fields are treated as one unit.\n    Any changes have to replace the entire struct.",
+     "category": "CRD processing",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "category": "CRD validation",
+   "markers": [
+    {
+     "name": "default",
+     "target": "field",
+     "summary": "Default sets the default value for this field.",
+     "details": "A default value will be accepted as any value valid for the field.\nOnly JSON-formatted values are accepted. `ref(...)` values are ignored.\nFormatting for common types include: boolean: `true`, string:\n`\"Cluster\"`, numerical: `1.24`, array: `[1,2]`, object: `{\"policy\":\n\"delete\"}`). Defaults should be defined in pruned form, and only best-effort\nvalidation will be performed. Full validation of a default requires\nsubmission of the containing CRD to an apiserver.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "value",
+       "type": "any",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:default",
+     "target": "field",
+     "summary": "sets the default value for this field.",
+     "details": "A default value will be accepted as any value valid for the\nfield. Formatting for common types include: boolean: `true`, string:\n`Cluster`, numerical: `1.24`, array: `{1,2}`, object: `{policy:\n\"delete\"}`). Defaults should be defined in pruned form, and only best-effort\nvalidation will be performed. Full validation of a default requires\nsubmission of the containing CRD to an apiserver.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "any",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:example",
+     "target": "field",
+     "summary": "sets the example value for this field.",
+     "details": "An example value will be accepted as any value valid for the\nfield. Formatting for common types include: boolean: `true`, string:\n`Cluster`, numerical: `1.24`, array: `{1,2}`, object: `{policy:\n\"delete\"}`). Examples should be defined in pruned form, and only best-effort\nvalidation will be performed. Full validation of an example requires\nsubmission of the containing CRD to an apiserver.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "any",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:title",
+     "target": "field",
+     "summary": "sets the title for this field.",
+     "details": "The title is metadata that makes the OpenAPI documentation more user-friendly,\nmaking the schema more understandable when viewed in documentation tools.\nIt's a metadata field that doesn't affect validation but provides\nimportant context about what the schema represents.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "any",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:AtMostOneOf",
+     "target": "type",
+     "summary": "specifies a list of field names that must conform to the AtMostOneOf constraint.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "slice",
+       "optional": false,
+       "itemType": {
+        "type": "string",
+        "optional": false
+       },
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:EmbeddedResource",
+     "target": "field",
+     "summary": "EmbeddedResource marks a fields as an embedded resource with apiVersion, kind and metadata fields.",
+     "details": "An embedded resource is a value that has apiVersion, kind and metadata fields.\nThey are validated implicitly according to the semantics of the currently\nrunning apiserver. It is not necessary to add any additional schema for these\nfield, yet it is possible. This can be combined with PreserveUnknownFields.",
+     "category": "CRD validation"
+    },
+    {
+     "name": "kubebuilder:validation:Enum",
+     "target": "field",
+     "summary": "specifies that this (scalar) field is restricted to the *exact* values specified here.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "slice",
+       "optional": false,
+       "itemType": {
+        "type": "any",
+        "optional": false
+       },
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:Enum",
+     "target": "type",
+     "summary": "specifies that this (scalar) field is restricted to the *exact* values specified here.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "slice",
+       "optional": false,
+       "itemType": {
+        "type": "any",
+        "optional": false
+       },
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:ExactlyOneOf",
+     "target": "type",
+     "summary": "specifies a list of field names that must conform to the ExactlyOneOf constraint.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "slice",
+       "optional": false,
+       "itemType": {
+        "type": "string",
+        "optional": false
+       },
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:ExclusiveMaximum",
+     "target": "field",
+     "summary": "indicates that the maximum is \"up to\" but not including that value.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "bool",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:ExclusiveMaximum",
+     "target": "type",
+     "summary": "indicates that the maximum is \"up to\" but not including that value.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "bool",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:ExclusiveMinimum",
+     "target": "field",
+     "summary": "indicates that the minimum is \"up to\" but not including that value.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "bool",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:ExclusiveMinimum",
+     "target": "type",
+     "summary": "indicates that the minimum is \"up to\" but not including that value.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "bool",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:Format",
+     "target": "type",
+     "summary": "specifies additional \"complex\" formatting for this field.",
+     "details": "For example, a date-time field would be marked as \"type: string\" and\n\"format: date-time\".",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:Format",
+     "target": "field",
+     "summary": "specifies additional \"complex\" formatting for this field.",
+     "details": "For example, a date-time field would be marked as \"type: string\" and\n\"format: date-time\".",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:MaxItems",
+     "target": "type",
+     "summary": "specifies the maximum length for this list.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:MaxItems",
+     "target": "field",
+     "summary": "specifies the maximum length for this list.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:MaxLength",
+     "target": "field",
+     "summary": "specifies the maximum length for this string.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:MaxLength",
+     "target": "type",
+     "summary": "specifies the maximum length for this string.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:MaxProperties",
+     "target": "field",
+     "summary": "restricts the number of keys in an object",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:MaxProperties",
+     "target": "type",
+     "summary": "restricts the number of keys in an object",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:Maximum",
+     "target": "field",
+     "summary": "specifies the maximum numeric value that this field can have.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:Maximum",
+     "target": "type",
+     "summary": "specifies the maximum numeric value that this field can have.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:MinItems",
+     "target": "type",
+     "summary": "specifies the minimum length for this list.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:MinItems",
+     "target": "field",
+     "summary": "specifies the minimum length for this list.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:MinLength",
+     "target": "type",
+     "summary": "specifies the minimum length for this string.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:MinLength",
+     "target": "field",
+     "summary": "specifies the minimum length for this string.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:MinProperties",
+     "target": "type",
+     "summary": "restricts the number of keys in an object",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:MinProperties",
+     "target": "field",
+     "summary": "restricts the number of keys in an object",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:Minimum",
+     "target": "field",
+     "summary": "specifies the minimum numeric value that this field can have. Negative numbers are supported.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:Minimum",
+     "target": "type",
+     "summary": "specifies the minimum numeric value that this field can have. Negative numbers are supported.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:MultipleOf",
+     "target": "field",
+     "summary": "specifies that this field must have a numeric value that's a multiple of this one.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:MultipleOf",
+     "target": "type",
+     "summary": "specifies that this field must have a numeric value that's a multiple of this one.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:Optional",
+     "target": "field",
+     "summary": "specifies that this field is optional.",
+     "category": "CRD validation"
+    },
+    {
+     "name": "kubebuilder:validation:Optional",
+     "target": "package",
+     "summary": "specifies that all fields in this package are optional by default.",
+     "category": "CRD validation"
+    },
+    {
+     "name": "kubebuilder:validation:Pattern",
+     "target": "type",
+     "summary": "specifies that this string must match the given regular expression.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:Pattern",
+     "target": "field",
+     "summary": "specifies that this string must match the given regular expression.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:Required",
+     "target": "package",
+     "summary": "specifies that all fields in this package are required by default.",
+     "category": "CRD validation"
+    },
+    {
+     "name": "kubebuilder:validation:Required",
+     "target": "field",
+     "summary": "specifies that this field is required.",
+     "category": "CRD validation"
+    },
+    {
+     "name": "kubebuilder:validation:Schemaless",
+     "target": "field",
+     "summary": "marks a field as being a schemaless object.",
+     "details": "Schemaless objects are not introspected, so you must provide\nany type and validation information yourself. One use for this\ntag is for embedding fields that hold JSONSchema typed objects.\nBecause this field disables all type checking, it is recommended\nto be used only as a last resort.",
+     "category": "CRD validation"
+    },
+    {
+     "name": "kubebuilder:validation:Type",
+     "target": "field",
+     "summary": "overrides the type for this field (which defaults to the equivalent of the Go type).",
+     "details": "This generally must be paired with custom serialization.  For example, the\nmetav1.Time field would be marked as \"type: string\" and \"format: date-time\".",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:Type",
+     "target": "type",
+     "summary": "overrides the type for this field (which defaults to the equivalent of the Go type).",
+     "details": "This generally must be paired with custom serialization.  For example, the\nmetav1.Time field would be marked as \"type: string\" and \"format: date-time\".",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:UniqueItems",
+     "target": "field",
+     "summary": "specifies that all items in this list must be unique.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "bool",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:UniqueItems",
+     "target": "type",
+     "summary": "specifies that all items in this list must be unique.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "bool",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:XEmbeddedResource",
+     "target": "type",
+     "summary": "EmbeddedResource marks a fields as an embedded resource with apiVersion, kind and metadata fields.",
+     "details": "An embedded resource is a value that has apiVersion, kind and metadata fields.\nThey are validated implicitly according to the semantics of the currently\nrunning apiserver. It is not necessary to add any additional schema for these\nfield, yet it is possible. This can be combined with PreserveUnknownFields.",
+     "category": "CRD validation"
+    },
+    {
+     "name": "kubebuilder:validation:XEmbeddedResource",
+     "target": "field",
+     "summary": "EmbeddedResource marks a fields as an embedded resource with apiVersion, kind and metadata fields.",
+     "details": "An embedded resource is a value that has apiVersion, kind and metadata fields.\nThey are validated implicitly according to the semantics of the currently\nrunning apiserver. It is not necessary to add any additional schema for these\nfield, yet it is possible. This can be combined with PreserveUnknownFields.",
+     "category": "CRD validation"
+    },
+    {
+     "name": "kubebuilder:validation:XIntOrString",
+     "target": "type",
+     "summary": "IntOrString marks a fields as an IntOrString.",
+     "details": "This is required when applying patterns or other validations to an IntOrString\nfield. Known information about the type is applied during the collapse phase\nand as such is not normally available during marker application.",
+     "category": "CRD validation"
+    },
+    {
+     "name": "kubebuilder:validation:XIntOrString",
+     "target": "field",
+     "summary": "IntOrString marks a fields as an IntOrString.",
+     "details": "This is required when applying patterns or other validations to an IntOrString\nfield. Known information about the type is applied during the collapse phase\nand as such is not normally available during marker application.",
+     "category": "CRD validation"
+    },
+    {
+     "name": "kubebuilder:validation:XValidation",
+     "target": "field",
+     "summary": "marks a field as requiring a value for which a given",
+     "details": "expression evaluates to true.\n\nThis marker may be repeated to specify multiple expressions, all of\nwhich must evaluate to true.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "fieldPath",
+       "type": "string",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "message",
+       "type": "string",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "messageExpression",
+       "type": "string",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "optionalOldSelf",
+       "type": "bool",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "reason",
+       "type": "string",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "rule",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:XValidation",
+     "target": "type",
+     "summary": "marks a field as requiring a value for which a given",
+     "details": "expression evaluates to true.\n\nThis marker may be repeated to specify multiple expressions, all of\nwhich must evaluate to true.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "fieldPath",
+       "type": "string",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "message",
+       "type": "string",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "messageExpression",
+       "type": "string",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "optionalOldSelf",
+       "type": "bool",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "reason",
+       "type": "string",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "rule",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:Enum",
+     "target": "field",
+     "summary": "for array items specifies that this (scalar) field is restricted to the *exact* values specified here.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "slice",
+       "optional": false,
+       "itemType": {
+        "type": "any",
+        "optional": false
+       },
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:Enum",
+     "target": "type",
+     "summary": "for array items specifies that this (scalar) field is restricted to the *exact* values specified here.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "slice",
+       "optional": false,
+       "itemType": {
+        "type": "any",
+        "optional": false
+       },
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:ExclusiveMaximum",
+     "target": "type",
+     "summary": "for array items indicates that the maximum is \"up to\" but not including that value.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "bool",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:ExclusiveMaximum",
+     "target": "field",
+     "summary": "for array items indicates that the maximum is \"up to\" but not including that value.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "bool",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:ExclusiveMinimum",
+     "target": "field",
+     "summary": "for array items indicates that the minimum is \"up to\" but not including that value.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "bool",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:ExclusiveMinimum",
+     "target": "type",
+     "summary": "for array items indicates that the minimum is \"up to\" but not including that value.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "bool",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:Format",
+     "target": "field",
+     "summary": "for array items specifies additional \"complex\" formatting for this field.",
+     "details": "For example, a date-time field would be marked as \"type: string\" and\n\"format: date-time\".",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:Format",
+     "target": "type",
+     "summary": "for array items specifies additional \"complex\" formatting for this field.",
+     "details": "For example, a date-time field would be marked as \"type: string\" and\n\"format: date-time\".",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:MaxItems",
+     "target": "type",
+     "summary": "for array items specifies the maximum length for this list.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:MaxItems",
+     "target": "field",
+     "summary": "for array items specifies the maximum length for this list.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:MaxLength",
+     "target": "type",
+     "summary": "for array items specifies the maximum length for this string.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:MaxLength",
+     "target": "field",
+     "summary": "for array items specifies the maximum length for this string.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:MaxProperties",
+     "target": "field",
+     "summary": "for array items restricts the number of keys in an object",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:MaxProperties",
+     "target": "type",
+     "summary": "for array items restricts the number of keys in an object",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:Maximum",
+     "target": "field",
+     "summary": "for array items specifies the maximum numeric value that this field can have.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:Maximum",
+     "target": "type",
+     "summary": "for array items specifies the maximum numeric value that this field can have.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:MinItems",
+     "target": "type",
+     "summary": "for array items specifies the minimum length for this list.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:MinItems",
+     "target": "field",
+     "summary": "for array items specifies the minimum length for this list.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:MinLength",
+     "target": "field",
+     "summary": "for array items specifies the minimum length for this string.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:MinLength",
+     "target": "type",
+     "summary": "for array items specifies the minimum length for this string.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:MinProperties",
+     "target": "field",
+     "summary": "for array items restricts the number of keys in an object",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:MinProperties",
+     "target": "type",
+     "summary": "for array items restricts the number of keys in an object",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "int",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:Minimum",
+     "target": "field",
+     "summary": "for array items specifies the minimum numeric value that this field can have. Negative numbers are supported.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:Minimum",
+     "target": "type",
+     "summary": "for array items specifies the minimum numeric value that this field can have. Negative numbers are supported.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:MultipleOf",
+     "target": "field",
+     "summary": "for array items specifies that this field must have a numeric value that's a multiple of this one.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:MultipleOf",
+     "target": "type",
+     "summary": "for array items specifies that this field must have a numeric value that's a multiple of this one.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:Pattern",
+     "target": "field",
+     "summary": "for array items specifies that this string must match the given regular expression.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:Pattern",
+     "target": "type",
+     "summary": "for array items specifies that this string must match the given regular expression.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:Type",
+     "target": "type",
+     "summary": "for array items overrides the type for this field (which defaults to the equivalent of the Go type).",
+     "details": "This generally must be paired with custom serialization.  For example, the\nmetav1.Time field would be marked as \"type: string\" and \"format: date-time\".",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:Type",
+     "target": "field",
+     "summary": "for array items overrides the type for this field (which defaults to the equivalent of the Go type).",
+     "details": "This generally must be paired with custom serialization.  For example, the\nmetav1.Time field would be marked as \"type: string\" and \"format: date-time\".",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:UniqueItems",
+     "target": "field",
+     "summary": "for array items specifies that all items in this list must be unique.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "bool",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:UniqueItems",
+     "target": "type",
+     "summary": "for array items specifies that all items in this list must be unique.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "",
+       "type": "bool",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:XEmbeddedResource",
+     "target": "type",
+     "summary": "for array items EmbeddedResource marks a fields as an embedded resource with apiVersion, kind and metadata fields.",
+     "details": "An embedded resource is a value that has apiVersion, kind and metadata fields.\nThey are validated implicitly according to the semantics of the currently\nrunning apiserver. It is not necessary to add any additional schema for these\nfield, yet it is possible. This can be combined with PreserveUnknownFields.",
+     "category": "CRD validation"
+    },
+    {
+     "name": "kubebuilder:validation:items:XEmbeddedResource",
+     "target": "field",
+     "summary": "for array items EmbeddedResource marks a fields as an embedded resource with apiVersion, kind and metadata fields.",
+     "details": "An embedded resource is a value that has apiVersion, kind and metadata fields.\nThey are validated implicitly according to the semantics of the currently\nrunning apiserver. It is not necessary to add any additional schema for these\nfield, yet it is possible. This can be combined with PreserveUnknownFields.",
+     "category": "CRD validation"
+    },
+    {
+     "name": "kubebuilder:validation:items:XIntOrString",
+     "target": "type",
+     "summary": "for array items IntOrString marks a fields as an IntOrString.",
+     "details": "This is required when applying patterns or other validations to an IntOrString\nfield. Known information about the type is applied during the collapse phase\nand as such is not normally available during marker application.",
+     "category": "CRD validation"
+    },
+    {
+     "name": "kubebuilder:validation:items:XIntOrString",
+     "target": "field",
+     "summary": "for array items IntOrString marks a fields as an IntOrString.",
+     "details": "This is required when applying patterns or other validations to an IntOrString\nfield. Known information about the type is applied during the collapse phase\nand as such is not normally available during marker application.",
+     "category": "CRD validation"
+    },
+    {
+     "name": "kubebuilder:validation:items:XValidation",
+     "target": "field",
+     "summary": "for array items marks a field as requiring a value for which a given",
+     "details": "expression evaluates to true.\n\nThis marker may be repeated to specify multiple expressions, all of\nwhich must evaluate to true.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "fieldPath",
+       "type": "string",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "message",
+       "type": "string",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "messageExpression",
+       "type": "string",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "optionalOldSelf",
+       "type": "bool",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "reason",
+       "type": "string",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "rule",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:validation:items:XValidation",
+     "target": "type",
+     "summary": "for array items marks a field as requiring a value for which a given",
+     "details": "expression evaluates to true.\n\nThis marker may be repeated to specify multiple expressions, all of\nwhich must evaluate to true.",
+     "category": "CRD validation",
+     "fields": [
+      {
+       "name": "fieldPath",
+       "type": "string",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "message",
+       "type": "string",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "messageExpression",
+       "type": "string",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "optionalOldSelf",
+       "type": "bool",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "reason",
+       "type": "string",
+       "optional": true,
+       "summary": ""
+      },
+      {
+       "name": "rule",
+       "type": "string",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "nullable",
+     "target": "field",
+     "summary": "marks this field as allowing the \"null\" value.",
+     "details": "This is often not necessary, but may be helpful with custom serialization.",
+     "category": "CRD validation"
+    },
+    {
+     "name": "optional",
+     "target": "field",
+     "summary": "specifies that this field is optional.",
+     "category": "CRD validation"
+    },
+    {
+     "name": "required",
+     "target": "field",
+     "summary": "specifies that this field is required.",
+     "category": "CRD validation"
+    }
+   ]
+  },
+  {
+   "category": "apply",
+   "markers": [
+    {
+     "name": "kubebuilder:ac:generate",
+     "target": "package",
+     "summary": "overrides enabling or disabling applyconfiguration generation for the package",
+     "category": "apply",
+     "fields": [
+      {
+       "name": "",
+       "type": "bool",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:ac:generate",
+     "target": "type",
+     "summary": "overrides enabling or disabling applyconfiguration generation for the type, can be used to generate applyconfiguration for a single type when the package generation is disabled, or to disable generation for a single type when the package generation is enabled",
+     "category": "apply",
+     "fields": [
+      {
+       "name": "",
+       "type": "bool",
+       "optional": false,
+       "summary": ""
+      }
+     ]
+    },
+    {
+     "name": "kubebuilder:ac:output:package",
+     "target": "package",
+     "summary": "overrides the default output package for the applyconfiguration generation, supports relative paths to the API directory. The default value is \"applyconfiguration\"",
+     "category": "apply",
+     "fields": [
+      {
+       "name": "",
+       "type": "string",
        "optional": false,
        "summary": ""
       }

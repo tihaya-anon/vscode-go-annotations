@@ -23,7 +23,13 @@ interface Workspace {
   codeActions?: CodeActionProvider;
   // The one open document.
   document?: unknown;
-  diagnostics?: Array<{ message: string; code: string; range: Range }>;
+  diagnostics?: Array<{ message: string; code: string; range: Range; tags?: number[] }>;
+  completion?: {
+    provideCompletionItems(
+      doc: unknown,
+      pos: { line: number; character: number },
+    ): Array<{ label: string; insertText: string; range: Range; command?: unknown }> | undefined;
+  };
 }
 
 type Range = { start: number[]; end: number[] };
@@ -93,7 +99,15 @@ function stubVscode(text: string, painted: Painted, ws: Workspace) {
         this.message = message;
       }
     },
-    DiagnosticSeverity: { Warning: 1 },
+    DiagnosticSeverity: { Error: 0, Warning: 1, Information: 2 },
+    DiagnosticTag: { Deprecated: 2 },
+    CompletionItemKind: { Keyword: 13, Property: 9 },
+    CompletionItem: class {
+      label: string;
+      constructor(label: string) {
+        this.label = label;
+      }
+    },
     CodeActionKind: { QuickFix: 'quickfix' },
     CodeAction: class {
       title: string;
@@ -125,6 +139,10 @@ function stubVscode(text: string, painted: Painted, ws: Workspace) {
         delete() {},
         dispose() {},
       }),
+      registerCompletionItemProvider: (_selector: string, provider: Workspace['completion']) => {
+        ws.completion = provider;
+        return { dispose() {} };
+      },
       registerCodeActionsProvider: (_selector: string, provider: CodeActionProvider) => {
         ws.codeActions = provider;
         return { dispose() {} };
@@ -256,7 +274,7 @@ test('doc-start warnings come with quick fixes', { skip: built }, async () => {
   const ws: Workspace = { trusted: false, folders: [root], logs: [] };
   await activate(ws);
   const lowercase = ws.diagnostics!.find((d) => d.message.includes('"Lowercase"'))!;
-  assert.equal(ws.diagnostics!.length, 3);
+  assert.equal(ws.diagnostics!.filter((d) => d.code === 'doc-start').length, 3);
   assert.equal(lowercase.code, 'doc-start');
   const actions = ws.codeActions!.provideCodeActions(
     ws.document,
@@ -277,6 +295,27 @@ test('doc-start warnings come with quick fixes', { skip: built }, async () => {
   );
 });
 
+test('marker diagnostics and completion', { skip: built }, async () => {
+  const ws: Workspace = { trusted: false, folders: [root], logs: [] };
+  await activate(ws);
+  // sample.go puts +kubebuilder:rbac, a package marker, in a type's doc.
+  assert.deepEqual(
+    ws.diagnostics!.filter((d) => d.code !== 'doc-start').map((d) => d.code),
+    ['wrong-target'],
+  );
+
+  const lines = readFileSync(path.join(root, 'test/fixtures/sample.go'), 'utf8').split('\n');
+  const line = lines.findIndex((l) => l === '// +kubebuilder:resource:scope=Cluster');
+  const items = ws.completion!.provideCompletionItems(ws.document, { line, character: 8 })!;
+  const printcolumn = items.find((i) => i.label === 'kubebuilder:printcolumn')!;
+  assert.equal(printcolumn.insertText, 'kubebuilder:printcolumn:');
+  assert.deepEqual([printcolumn.range.start, printcolumn.range.end], [
+    [line, 4],
+    [line, 'kubebuilder:resource:scope'.length + 4],
+  ]);
+  assert.ok(printcolumn.command, 'argument names are offered next');
+});
+
 const playground = path.join(root, 'playground');
 const noControllerGen =
   !existsSync(path.join(playground, 'bin/controller-gen')) && 'no playground/bin/controller-gen';
@@ -288,6 +327,6 @@ test('a trusted workspace uses its bin/controller-gen and caches by version', { 
   assert.match(await markersLoaded(ws), /^Using \d+ markers from .*playground\/bin\/controller-gen \(v/);
   assert.deepEqual(
     [...globalState.keys()].map((k) => k.replace(/v[\d.]+$/, 'vX')),
-    ['controllerGenHelp/vX'],
+    ['controllerGenHelp/v2/vX'],
   );
 });

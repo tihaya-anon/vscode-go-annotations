@@ -128,11 +128,40 @@ Uses:
   its arguments in `-ww` notation); over an argument's key or value, that argument. Only
   whole-line `//` comments, which is where controller-gen reads markers. Highlighting and hover
   share `parseMarker()` so they never disagree on where the name ends;
-- completion after `// +`;
-- diagnostics: unknown marker, missing required argument, wrong target (a `type` marker on a
-  field), using the syntax tree the analyzer already has. `+kubebuilder:scaffold:*` (Kubebuilder
-  CLI insertion points) and other generators' markers are not in the registry, so "unknown" must
-  be limited to the namespaces the registry covers (`kubebuilder:validation:*` etc.).
+- completion (done): after `// +`, the names valid where the cursor is; after `name:` or `,`,
+  the arguments not given yet, required first;
+- diagnostics (done), below.
+
+### Where a marker attaches
+
+controller-gen silently drops a marker in a place it does not read, or one registered for
+another target, so the diagnostics need its exact rules (controller-tools `pkg/markers/collect.go`,
+`associateFileMarkers` and `markerSubVisitor.Visit`; mirrored in `markerTargets()` in
+`src/analyze.ts`, and checked against controller-gen v0.19.0 output):
+
+- Before a declaration it reads two comment groups: the doc (ending on the line above) and the
+  closest group before that, a blank line up. A third group up is ignored.
+- A field takes both. A type takes both, but a marker in the closest group that is a package
+  marker and not a type marker goes to the package (Kubebuilder's `+kubebuilder:webhook` above a
+  defaulter type relies on this).
+- Any other top-level declaration gives its closest group to the package and **drops its doc**:
+  `+kubebuilder:rbac` inside `Reconcile`'s doc comment is ignored. Kubebuilder scaffolds a blank
+  line between them for this reason.
+- Further top-level groups, groups above `package` and after the last declaration go to the
+  package. Trailing comments and comments in function bodies are ignored.
+
+### Diagnostics
+
+Severity follows controller-gen: what makes it fail is an error (unknown argument, missing
+required argument or value, an int/bool value that does not parse, extra values for a
+slice/int/bool), what it silently drops is a warning (unknown marker, ignored place, wrong
+target), a deprecated marker is information with the deprecated tag. "Unknown marker" is only
+claimed in the `kubebuilder:` namespace minus `kubebuilder:scaffold:` (Kubebuilder CLI insertion
+points); other namespaces belong to other generators. That is why the registry is built from every
+generator with kubebuilder markers, `applyconfiguration` included. `+default` parses its own
+arguments (`ParseMarker`), so its help does not describe its syntax and its arguments are not
+checked. Typos in marker and argument names get a "did you mean" quick fix. Value checks for
+strings are left out: whether controller-gen accepts a bare comma in one was not checked.
 
 `extensionKind: ["workspace"]` is set so that, in a dev container, the extension runs where
 `controller-gen` is.

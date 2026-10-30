@@ -6,6 +6,9 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import type { Parser } from 'web-tree-sitter';
 import { analyze, type DocIssue, type SpanKind } from './analyze.ts';
+import type { MarkerTarget } from './markers.ts';
+import { completeMarker } from './markerCompletion.ts';
+import { checkMarkers, type MarkerIssue } from './markerDiagnostics.ts';
 import builtinMarkers from './controller-gen-markers.json' with { type: 'json' };
 import { controllerGenHelp, controllerGenVersion } from './controllerGen.ts';
 import { createGoParser } from './goParser.ts';
@@ -82,7 +85,46 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         );
       },
     }),
-    vscode.languages.registerCodeActionsProvider('go', docStartFixes(painter), {
+    vscode.languages.registerCompletionItemProvider(
+      'go',
+      {
+        provideCompletionItems(doc, pos) {
+          const config = vscode.workspace.getConfiguration('goAnnotations');
+          if (!config.get('markers.enabled', true)) return;
+          const line = doc.lineAt(pos.line).text;
+          const start = line.search(/\S/);
+          if (start < 0 || !line.startsWith('//', start)) return;
+          const targets = painter.analysis(doc).targets.get(pos.line) ?? [];
+          return completeMarker(line.slice(start), pos.character - start, targets, markers).map(
+            (c) => {
+              const item = new vscode.CompletionItem(
+                c.label,
+                c.kind === 'marker'
+                  ? vscode.CompletionItemKind.Keyword
+                  : vscode.CompletionItemKind.Property,
+              );
+              item.range = new vscode.Range(
+                pos.line,
+                start + c.range[0],
+                pos.line,
+                start + c.range[1],
+              );
+              item.insertText = c.insertText;
+              item.detail = c.detail;
+              item.documentation = new vscode.MarkdownString(c.documentation);
+              item.sortText = c.sortText;
+              if (c.retrigger)
+                item.command = { command: 'editor.action.triggerSuggest', title: '' };
+              return item;
+            },
+          );
+        },
+      },
+      '+',
+      ':',
+      ',',
+    ),
+    vscode.languages.registerCodeActionsProvider('go', quickFixes(painter), {
       providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
     }),
     vscode.window.onDidChangeVisibleTextEditors(() => painter.paintVisible()),
@@ -115,7 +157,8 @@ async function workspaceRegistry(
     try {
       // A release's markers never change, so its help is cached across sessions; a local build
       // reports `(devel)` and is asked every time.
-      const key = `controllerGenHelp/${version}`;
+      // v2: the generator list grew; help cached under the old key lacks applyconfiguration.
+      const key = `controllerGenHelp/v2/${version}`;
       const cacheable = /^v\d/.test(version);
       let help = cacheable ? context.globalState.get<unknown[]>(key) : undefined;
       if (!help) {
@@ -207,19 +250,15 @@ class Painter implements vscode.Disposable {
     this.diagnostics.delete(doc.uri);
   }
 
-  // The doc-start issues of the document as it is now, for quick fixes.
-  docIssues(doc: vscode.TextDocument): DocIssue[] {
-    return this.analysed(doc).docIssues;
-  }
-
   private paint(editor: vscode.TextEditor): void {
     const doc = editor.document;
     if (doc.languageId !== 'go') return;
-    const { ranges } = this.analysed(doc);
+    const { ranges } = this.analysis(doc);
     for (const [kind, type] of this.types) editor.setDecorations(type, ranges.get(kind) ?? []);
   }
 
-  private analysed(doc: vscode.TextDocument): Analysed {
+  // The document as it is now, analysed at most once per version.
+  analysis(doc: vscode.TextDocument): Analysed {
     const key = doc.uri.toString();
     const cached = this.cache.get(key);
     if (cached && cached.version === doc.version) return cached;
@@ -228,6 +267,8 @@ class Painter implements vscode.Disposable {
     const tree = this.parser.parse(doc.getText());
     const ranges = new Map<SpanKind, vscode.Range[]>();
     let docIssues: DocIssue[] = [];
+    let markerIssues: MarkerIssue[] = [];
+    let targets = new Map<number, MarkerTarget[]>();
     if (tree) {
       const analysis = analyze(tree.rootNode, {
         structTags: config.get('structTags.enabled', true),
@@ -238,6 +279,10 @@ class Painter implements vscode.Disposable {
       });
       tree.delete();
       docIssues = analysis.docIssues;
+      targets = analysis.targets;
+      if (config.get('markers.diagnostics', true)) {
+        markerIssues = checkMarkers(analysis.markers, this.registry);
+      }
       for (const span of analysis.spans) {
         const list = ranges.get(span.kind) ?? [];
         list.push(
@@ -246,8 +291,11 @@ class Painter implements vscode.Disposable {
         ranges.set(span.kind, list);
       }
     }
-    this.diagnostics.set(doc.uri, docIssues.map(diagnostic));
-    const analysed = { version: doc.version, ranges, docIssues };
+    this.diagnostics.set(doc.uri, [
+      ...docIssues.map(docDiagnostic),
+      ...markerIssues.map(markerDiagnostic),
+    ]);
+    const analysed = { version: doc.version, ranges, docIssues, markerIssues, targets };
     this.cache.set(key, analysed);
     return analysed;
   }
@@ -286,13 +334,15 @@ interface Analysed {
   version: number;
   ranges: Map<SpanKind, vscode.Range[]>;
   docIssues: DocIssue[];
+  markerIssues: MarkerIssue[];
+  targets: Map<number, MarkerTarget[]>;
 }
 
-function issueRange(issue: DocIssue): vscode.Range {
+function issueRange(issue: DocIssue | MarkerIssue): vscode.Range {
   return new vscode.Range(issue.start.row, issue.start.column, issue.end.row, issue.end.column);
 }
 
-function diagnostic(issue: DocIssue): vscode.Diagnostic {
+function docDiagnostic(issue: DocIssue): vscode.Diagnostic {
   const names = issue.names.map((n) => `"${n}"`).join(' or ');
   const d = new vscode.Diagnostic(
     issueRange(issue),
@@ -304,13 +354,43 @@ function diagnostic(issue: DocIssue): vscode.Diagnostic {
   return d;
 }
 
-// One action per fix the analyzer offers; the first, a Go name, is preferred.
-function docStartFixes(painter: Painter): vscode.CodeActionProvider {
+const SEVERITY = {
+  error: vscode.DiagnosticSeverity.Error,
+  warning: vscode.DiagnosticSeverity.Warning,
+  info: vscode.DiagnosticSeverity.Information,
+};
+
+function markerDiagnostic(issue: MarkerIssue): vscode.Diagnostic {
+  const d = new vscode.Diagnostic(issueRange(issue), issue.message, SEVERITY[issue.severity]);
+  d.source = 'go-annotations';
+  d.code = issue.code;
+  if (issue.deprecated) d.tags = [vscode.DiagnosticTag.Deprecated];
+  return d;
+}
+
+// One action per fix the analyzer offers. For a doc start the first, a Go name, is preferred.
+function quickFixes(painter: Painter): vscode.CodeActionProvider {
+  const fix = (doc: vscode.TextDocument, at: vscode.Range, title: string, text: string) => {
+    const action = new vscode.CodeAction(title, vscode.CodeActionKind.QuickFix);
+    action.edit = new vscode.WorkspaceEdit();
+    action.edit.replace(doc.uri, at, text);
+    return action;
+  };
   return {
     provideCodeActions(doc, range, context) {
-      if (!context.diagnostics.some((d) => d.code === 'doc-start')) return [];
+      const ours = context.diagnostics.filter((d) => d.source === 'go-annotations');
+      if (ours.length === 0) return [];
+      const { docIssues, markerIssues } = painter.analysis(doc);
       const actions: vscode.CodeAction[] = [];
-      for (const issue of painter.docIssues(doc)) {
+      for (const issue of markerIssues) {
+        const at = issueRange(issue);
+        if (!issue.fix || !at.intersection(range)) continue;
+        const action = fix(doc, at, issue.fix.title, issue.fix.text);
+        action.diagnostics = ours.filter((d) => d.range.isEqual(at));
+        action.isPreferred = true;
+        actions.push(action);
+      }
+      for (const issue of docIssues) {
         const at = issueRange(issue);
         if (!at.intersection(range)) continue;
         issue.fixes.forEach(({ name, text }, i) => {
@@ -318,10 +398,8 @@ function docStartFixes(painter: Painter): vscode.CodeActionProvider {
             text === name
               ? `Change "${issue.word}" to "${name}"`
               : `Start the doc comment with "${name}"`;
-          const action = new vscode.CodeAction(title, vscode.CodeActionKind.QuickFix);
-          action.edit = new vscode.WorkspaceEdit();
-          action.edit.replace(doc.uri, at, text);
-          action.diagnostics = context.diagnostics.filter((d) => d.range.isEqual(at));
+          const action = fix(doc, at, title, text);
+          action.diagnostics = ours.filter((d) => d.range.isEqual(at));
           action.isPreferred = i === 0;
           actions.push(action);
         });

@@ -93,12 +93,29 @@ name, and the check warns only when a doc opens with neither name:
 - Zero warnings over the playground's Go files.
 - The owner checked the warning and both kinds of quick fix in VS Code.
 
+## 2026-10-30 — phase 6: marker completion and diagnostics
+
+Done (see [design.md](design.md#where-a-marker-attaches)):
+
+- `markerTargets()` in the analyzer: where controller-gen attaches each comment's markers, read
+  from its source and checked by running controller-gen on probe files. Found on the way: markers
+  in a function's doc are ignored; a package marker in the group above a type moves to the
+  package; a third group above a field is ignored.
+- `src/markerDiagnostics.ts` with controller-gen's severities and did-you-mean quick fixes;
+  `src/markerCompletion.ts`. Setting `goAnnotations.markers.diagnostics`.
+- Registry now includes the `applyconfiguration` generator (`kubebuilder:ac:*`), deduplicates
+  markers shared between generators; the globalState cache key moved to `controllerGenHelp/v2/`.
+- Zero diagnostics over the playground's 52 markers. `test/fixtures/sample.go` has a real one:
+  its `+kubebuilder:rbac` sits in a type's doc, which controller-gen ignores.
+- Code formatted with prettier (`--print-width 100 --single-quote`) where new; there is no
+  prettier config or dependency in the repo yet.
+
+The owner checked completion, diagnostics and quick fixes in VS Code.
+
 ## Next steps
 
-1. Completion after `// +` and after `marker:`; diagnostics (unknown marker within covered
-   namespaces, missing required argument, wrong target, deprecated) — see
-   [design.md](design.md#marker-registry) for the scaffold-marker caveat. Wrong-target needs the
-   attachment target (package/type/field) from the syntax tree, which hover does not use yet.
+1. Possibly: value completion (bool, enums such as `scope=Cluster|Namespaced` are not in the
+   help, so only bool), checking string values, a prettier config.
 2. Only if large files feel slow: incremental parsing with `tree.edit()` from
    `TextDocumentChangeEvent.contentChanges`.
 3. Decide a licence (package.json says `UNLICENSED` for now) and whether to publish.

@@ -160,6 +160,45 @@ describe('sample.go', () => {
   });
 });
 
+describe('markers.go', () => {
+  const source = readFileSync(path.join(root, 'test/fixtures/markers.go'), 'utf8');
+  const lines = source.split('\n');
+
+  test('markers attach where controller-gen reads them', () => {
+    const tree = parser.parse(source)!;
+    const sites = analyze(tree.rootNode, ALL).markers.map((m) => {
+      const name = m.parts.nameText;
+      // The rbac lines are told apart by their group.
+      const rbac = name === 'kubebuilder:rbac' && /groups=(\w+)/.exec(lines[m.start.row]!);
+      const group = rbac ? ` ${rbac[1]}` : '';
+      return `${m.targets.join('|') || 'ignored'} ${name}${group}`;
+    });
+    tree.delete();
+    assert.deepEqual(sites.slice(0, 13), [
+      'package kubebuilder:object:generate',
+      'package groupName',
+      'package kubebuilder:rbac detached',
+      // In a function's doc.
+      'ignored kubebuilder:rbac indoc',
+      // A blank line above a type: the type's, or the package's if it is a package marker.
+      'type|package kubebuilder:object:root',
+      'type kubebuilder:printcolumn',
+      'field kubebuilder:validation:Minimum',
+      // Trailing.
+      'ignored optional',
+      'field kubebuilder:validation:MaxLength',
+      // Two groups above a field: only the closer one counts.
+      'ignored kubebuilder:validation:MinLength',
+      'field kubebuilder:validation:MaxLength',
+      'type kubebuilder:object:root',
+      // In a function body.
+      'ignored kubebuilder:validation:Minimum',
+    ]);
+    assert.equal(sites[13], 'type|package kubebuilder:webhook');
+    assert.equal(sites.at(-1), 'package kubebuilder:rbac eof', 'after the last declaration');
+  });
+});
+
 describe('playground', () => {
   // A smoke test over real Kubebuilder output: every span must fall inside its line.
   const dir = path.join(root, 'playground/api/v1alpha1');

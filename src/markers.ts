@@ -26,6 +26,11 @@ export interface MarkerDefinition {
   arguments: MarkerArgument[];
 }
 
+// An argument's type as controller-gen's -ww help writes it: []string for a slice.
+export function argumentType(argument: MarkerArgument): string {
+  return argument.type === 'slice' ? `[]${argument.itemType ?? 'any'}` : argument.type || 'any';
+}
+
 export class MarkerRegistry {
   // One name can be registered for several targets (listType on a field and on a type).
   private readonly byName = new Map<string, MarkerDefinition[]>();
@@ -33,6 +38,8 @@ export class MarkerRegistry {
   constructor(definitions: Iterable<MarkerDefinition>) {
     for (const def of definitions) {
       const list = this.byName.get(def.name) ?? [];
+      // Generators share markers (applyconfiguration repeats crd's); keep the first.
+      if (list.some((d) => d.target === def.target)) continue;
       list.push(def);
       this.byName.set(def.name, list);
     }
@@ -44,6 +51,10 @@ export class MarkerRegistry {
 
   get size(): number {
     return this.byName.size;
+  }
+
+  names(): string[] {
+    return [...this.byName.keys()];
   }
 
   lookup(name: string): MarkerDefinition[] {

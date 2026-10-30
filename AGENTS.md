@@ -26,12 +26,15 @@ src/analyze.ts        pure: tree-sitter syntax tree -> highlight spans (no vscod
 src/goParser.ts       loads web-tree-sitter and the Go grammar .wasm
 src/markers.ts        pure: marker registry parsed from `controller-gen <gen> -wwww` JSON
 src/markerHover.ts    pure: hover markdown for the marker or argument under the cursor
+src/markerCompletion.ts   pure: marker name and argument completion
+src/markerDiagnostics.ts  pure: marker checks with controller-gen's severities
 src/controllerGen.ts  runs a controller-gen binary for its version and marker help
 src/controller-gen-markers.json  built-in registry, used until/unless a workspace one loads
 src/extension.ts      vscode glue: decoration types, debounce, per-document cache, registry loading
 test/analyze.test.ts  analyzer against test/fixtures/sample.go and the playground API types
 test/markers.test.ts  registry parsing and name splitting; live check against playground/bin
 test/markerHover.test.ts  hover text against the built-in registry
+test/markerCompletion.test.ts, test/markerDiagnostics.test.ts  likewise
 test/bundle.test.ts   require()s dist/extension.cjs with a stub vscode module and activates it
 scripts/build.mjs     esbuild bundle + copies both .wasm files into dist/
 scripts/make-playground.sh  clones k8s-ai-platform into playground/ (gitignored)
@@ -62,8 +65,10 @@ semantic tokens as a user would see them.
 ## Conventions
 
 - Keep `src/analyze.ts` free of `vscode` imports; everything testable lives there.
-- Every analyzer behaviour gets a case in `test/fixtures/sample.go` and an assertion in
-  `test/analyze.test.ts`. Assertions are written as the highlighted source text, not offsets.
+- Every analyzer behaviour gets a case in `test/fixtures/sample.go` (marker placement and validity:
+  `test/fixtures/markers.go`) and an assertion in the tests. Assertions are written as the
+  highlighted source text, not offsets. A claim about what controller-gen does is checked by
+  running it (a scratch module copying `playground/go.mod`), not only by reading its source.
 - The package is ESM (`"type": "module"`), sources import each other as `./x.ts`, and only erasable
   TypeScript syntax is allowed (`erasableSyntaxOnly`): no enums, namespaces or parameter
   properties, because Node runs the tests by stripping types.

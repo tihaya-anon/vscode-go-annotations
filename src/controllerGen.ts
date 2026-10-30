@@ -5,9 +5,11 @@ import { promisify } from 'node:util';
 
 const run = promisify(execFile);
 
-// The generators whose markers appear in Kubebuilder API types and controllers. rbac refuses to
-// print help without its required roleName option; the value is never used.
-const GENERATORS = ['crd', 'rbac:roleName=help', 'webhook', 'object'];
+// The generators whose markers appear in Kubebuilder API types and controllers; together they
+// cover every kubebuilder:* marker controller-gen reads, which the unknown-marker check relies
+// on. rbac refuses to print help without its required roleName option; the value is never used.
+// applyconfiguration repeats the crd markers, which the registry merges.
+const GENERATORS = ['crd', 'rbac:roleName=help', 'webhook', 'object', 'applyconfiguration'];
 
 const TIMEOUT_MS = 10_000;
 

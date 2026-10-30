@@ -10,7 +10,11 @@ semantic highlighting:
   the name;
 - controller-gen / Kubebuilder markers such as `// +kubebuilder:validation:Minimum=1`: name in
   bold, arguments in italics. Hovering a marker shows controller-gen's documentation for it, or
-  for the argument under the cursor (type, required or optional).
+  for the argument under the cursor (type, required or optional). Marker names and arguments
+  complete after `// +`, `:` and `,`. Markers are checked the way controller-gen reads them:
+  errors for what makes it fail (unknown or missing arguments, bad values), warnings for what it
+  silently ignores (unknown `kubebuilder:*` markers, markers in a function's doc comment or on the
+  wrong kind of declaration).
 
 Doc names and markers are part of comments, so by default they keep the theme's comment colour
 and differ only in weight and style; struct tags get colours.
@@ -24,6 +28,7 @@ and differ only in weight and style; struct tags get colours.
 | `goAnnotations.docComments.checkStart` | `true` |
 | `goAnnotations.markers.enabled` | `true` |
 | `goAnnotations.comments.useColors` | `false` |
+| `goAnnotations.markers.diagnostics` | `true` |
 | `goAnnotations.markers.controllerGenPath` | `""` |
 
 Marker names are told apart from their first argument (`+kubebuilder:resource:scope=Cluster` is

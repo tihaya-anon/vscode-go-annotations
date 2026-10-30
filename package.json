@@ -58,6 +58,11 @@
           "default": true,
           "description": "Highlight controller-gen / Kubebuilder marker comments such as // +kubebuilder:validation:Minimum=1."
         },
+        "goAnnotations.markers.diagnostics": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Check markers against controller-gen's: unknown `kubebuilder:*` markers, markers in places controller-gen does not read or for another target (all silently ignored by controller-gen), and unknown, missing or ill-typed arguments (which make it fail)."
+        },
         "goAnnotations.markers.controllerGenPath": {
           "type": "string",
           "default": "",
