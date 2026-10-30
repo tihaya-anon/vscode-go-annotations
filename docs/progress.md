@@ -140,12 +140,16 @@ and the script that made it) is gone. The live controller-gen tests use `bin/con
 (gitignored, `go install`ed, see AGENTS.md); the smoke test runs over `test/fixtures/`; F5 opens
 `test/fixtures/`.
 
+## 2026-10-30 — 0.1.0 published
+
+`chihayaanon.go-annotations` 0.1.0 is on the Marketplace
+(https://marketplace.visualstudio.com/items?itemName=chihayaanon.go-annotations), published by
+`.github/workflows/publish.yml` with Trusted Publishing (run 41030595813, a manual run on `main`
+because the `v0.1.0` tag predates the workflow). Later releases go out by pushing a `v*` tag.
+
 ## Next steps
 
-1. Publish 0.1.0: the repo is pushed and `v0.1.0` tagged; `.github/workflows/publish.yml` publishes
-   with Trusted Publishing once the owner has created the policy on the Marketplace publisher
-   page. The tag predates the workflow, so 0.1.0 goes out by a manual run on `main`
-   (`gh workflow run publish.yml`). Optionally add README screenshots.
+1. Optionally add README screenshots (Marketplace page).
 2. Possibly: value completion (bool, enums such as `scope=Cluster|Namespaced` are not in the
    help, so only bool), checking string values, a prettier config.
 3. Only if large files feel slow: incremental parsing with `tree.edit()` from
