@@ -112,6 +112,13 @@ Done (see [design.md](design.md#where-a-marker-attaches)):
 
 The owner checked completion, diagnostics and quick fixes in VS Code.
 
+## 2026-10-30 — phase 7: separating marker arguments
+
+Italics alone did not separate the arguments of a long marker. Each `key=value` of a marker with
+named arguments now sits on a faint hueless rounded block (`goAnnotations.markerArgumentPair`),
+painted on the inline span via `textDecoration` so blocks on consecutive lines do not touch. The
+owner checked it in VS Code.
+
 ## Next steps
 
 1. Possibly: value completion (bool, enums such as `scope=Cluster|Namespaced` are not in the

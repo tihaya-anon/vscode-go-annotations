@@ -20,7 +20,21 @@ import { MarkerRegistry } from './markers.ts';
 // decoration cannot derive a colour from the theme's comment token colour, so the choice is the
 // comment colour untouched or a goAnnotations.* theme colour (goAnnotations.comments.useColors).
 // Struct tags are code and always use their colours.
-const STYLES: Record<SpanKind, { inComment: boolean; fontWeight?: string; fontStyle?: string }> = {
+//
+// markerArgumentPair is a faint rounded block behind each `key=value` of a marker. Its colour is a
+// white or black overlay with no hue, so it reads as lighter or darker on any theme and leaves the
+// text in the comment colour; it applies whether or not comments.useColors is on.
+//
+// It is painted on the text's own span, not with `backgroundColor`: VS Code draws that in a layer
+// one line high, so blocks on consecutive lines touched. An inline span's background covers only
+// the font's height, leaving a gap. There is no option for it, so the CSS goes in through
+// `textDecoration`, which VS Code copies into the inline style verbatim; if that ever stops
+// working, the blocks disappear and nothing else changes. The colour is the contributed theme
+// colour's CSS variable, so it stays themable.
+const STYLES: Record<
+  SpanKind,
+  { inComment: boolean; fontWeight?: string; fontStyle?: string; background?: boolean }
+> = {
   docCommentName: { inComment: true, fontWeight: 'bold' },
   structTagKey: { inComment: false },
   structTagName: { inComment: false },
@@ -29,6 +43,7 @@ const STYLES: Record<SpanKind, { inComment: boolean; fontWeight?: string; fontSt
   markerName: { inComment: true, fontWeight: 'bold' },
   markerArgument: { inComment: true, fontStyle: 'italic' },
   markerValue: { inComment: true },
+  markerArgumentPair: { inComment: true, background: true },
 };
 
 const DEBOUNCE_MS = 100;
@@ -306,11 +321,14 @@ class Painter implements vscode.Disposable {
       .get<boolean>('comments.useColors', false);
     for (const kind of Object.keys(STYLES) as SpanKind[]) {
       const style = STYLES[kind];
-      const colored = useColors || !style.inComment;
+      const colored = !style.background && (useColors || !style.inComment);
+      const block =
+        `none; background-color: var(--vscode-goAnnotations-${kind}); ` + 'border-radius: 3px';
       this.types.set(
         kind,
         vscode.window.createTextEditorDecorationType({
           color: colored ? new vscode.ThemeColor(`goAnnotations.${kind}`) : undefined,
+          textDecoration: style.background ? block : undefined,
           fontWeight: style.fontWeight,
           fontStyle: style.fontStyle,
         }),

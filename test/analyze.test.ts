@@ -122,6 +122,17 @@ describe('sample.go', () => {
       'a backquoted value keeps its inner = and quotes',
     );
     assert.equal(only(spans, 'markerPrefix').length, 10);
+    // Only markers with named arguments get a block per argument, and the anonymous value of a
+    // marker without them gets none.
+    assert.deepEqual(only(spans, 'markerArgumentPair'), [
+      'name="Ready"',
+      'type=string',
+      'JSONPath=`.status.conditions[?(@.type=="Ready")].status`',
+      'groups=apps',
+      'resources=deployments',
+      'verbs=get;list;watch',
+      'scope=Cluster',
+    ]);
   });
 
   test('markers: without a registry, only multi-argument markers expose a first key', () => {

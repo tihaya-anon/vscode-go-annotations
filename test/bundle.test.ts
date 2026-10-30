@@ -18,7 +18,12 @@ interface Workspace {
   logs: string[];
   config?: Record<string, unknown>;
   // Options of each decoration type created, in order.
-  types?: Array<{ color?: { id: string }; fontWeight?: string; fontStyle?: string }>;
+  types?: Array<{
+    color?: { id: string };
+    textDecoration?: string;
+    fontWeight?: string;
+    fontStyle?: string;
+  }>;
   hover?: HoverProvider;
   codeActions?: CodeActionProvider;
   // The one open document.
@@ -249,6 +254,9 @@ test('by default, comment decorations keep the comment colour', { skip: built },
     'goAnnotations.structTagOption',
   ]);
   assert.ok(ws.types!.some((t) => !t.color && t.fontWeight === 'bold'));
+  const pair = ws.types!.find((t) => t.textDecoration);
+  assert.match(pair!.textDecoration!, /background-color: var\(--vscode-goAnnotations-markerArgumentPair\)/);
+  assert.equal(pair!.color, undefined);
 });
 
 test('hover describes the marker under the cursor', { skip: built }, async () => {

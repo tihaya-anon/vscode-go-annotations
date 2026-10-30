@@ -151,6 +151,16 @@
           "highContrast": "#CE9178",
           "highContrastLight": "#A31515"
         }
+      },
+      {
+        "id": "goAnnotations.markerArgumentPair",
+        "description": "Background behind each key=value of a marker with named arguments, so they read as separate pieces. A hueless overlay by default; set it to #0000 to turn it off.",
+        "defaults": {
+          "dark": "#ffffff0f",
+          "light": "#0000000d",
+          "highContrast": "#ffffff26",
+          "highContrastLight": "#0000001f"
+        }
       }
     ],
     "commands": [

@@ -50,7 +50,11 @@ Costs accepted with B:
 - A decoration cannot take its colour from the theme's comment token colour (or derive a
   bolder/more saturated variant of it), and a contributed colour must have a default. So
   decorations inside comments (doc names, markers) set no colour by default and differ by weight
-  and style only: names bold, marker arguments italic. The owner's verdict on coloured comment
+  and style only: names bold, marker arguments italic. Italics alone did not separate the
+  arguments of a long marker, so each `key=value` also gets a faint rounded background: a white or
+  black overlay with no hue, which reads as lighter/darker on any theme. It is painted on the
+  inline text span (CSS injected through the `textDecoration` option), not with
+  `backgroundColor`, whose line-high layer made blocks on consecutive lines touch. The owner's verdict on coloured comment
   parts was that they read as code. `goAnnotations.comments.useColors` brings the colours back.
   Struct tags are code and keep colours. A future option is reading the active theme's JSON for
   the comment colour and deriving variants from it; fragile (theme includes, semantic overrides).

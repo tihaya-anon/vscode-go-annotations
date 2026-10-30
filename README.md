@@ -9,7 +9,7 @@ semantic highlighting:
   start with one of those names gets a warning, with quick fixes that correct the case or insert
   the name;
 - controller-gen / Kubebuilder markers such as `// +kubebuilder:validation:Minimum=1`: name in
-  bold, arguments in italics. Hovering a marker shows controller-gen's documentation for it, or
+  bold, arguments in italics, and each `key=value` on a faint block of its own. Hovering a marker shows controller-gen's documentation for it, or
   for the argument under the cursor (type, required or optional). Marker names and arguments
   complete after `// +`, `:` and `,`. Markers are checked the way controller-gen reads them:
   errors for what makes it fail (unknown or missing arguments, bad values), warnings for what it
@@ -48,7 +48,9 @@ Colours are theme colours and can be overridden (doc names and markers only take
 ```
 
 Available: `structTagKey`, `structTagName`, `structTagOption`, `docCommentName`, `markerPrefix`,
-`markerName`, `markerArgument`, `markerValue` (each prefixed `goAnnotations.`).
+`markerName`, `markerArgument`, `markerValue`, `markerArgumentPair` (each prefixed
+`goAnnotations.`). `markerArgumentPair` is the background behind each `key=value`; `#0000` turns
+it off.
 
 ## Development
 

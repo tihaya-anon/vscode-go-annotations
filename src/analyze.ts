@@ -16,7 +16,9 @@ export type SpanKind =
   | 'markerPrefix'
   | 'markerName'
   | 'markerArgument'
-  | 'markerValue';
+  | 'markerValue'
+  // A whole `key=value`, so that the arguments of a long marker read as separate pieces.
+  | 'markerArgumentPair';
 
 export interface Span {
   kind: SpanKind;
@@ -409,7 +411,9 @@ function markerSpans(comment: Node, marker: MarkerParts, spans: Span[]): void {
   };
   push('markerPrefix', [marker.prefix, marker.prefix + 1]);
   push('markerName', marker.name);
+  const keyed = marker.arguments.some((arg) => arg.key);
   for (const arg of marker.arguments) {
+    if (keyed) push('markerArgumentPair', [arg.key?.[0] ?? arg.value[0], arg.value[1]]);
     if (arg.key) push('markerArgument', arg.key);
     push('markerValue', arg.value);
   }
