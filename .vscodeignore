@@ -1,5 +1,10 @@
+# Only dist/ (bundle and .wasm), resources/icon.png, package.json, README, CHANGELOG and LICENSE
+# belong in the .vsix. web-tree-sitter is bundled, so node_modules is not needed.
 **
 !dist/extension.cjs
 !dist/*.wasm
+!resources/icon.png
 !package.json
 !README.md
+!CHANGELOG.md
+!LICENSE

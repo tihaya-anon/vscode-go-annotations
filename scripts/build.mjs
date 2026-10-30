@@ -4,6 +4,8 @@ import { copyFile, mkdir } from 'node:fs/promises';
 import * as esbuild from 'esbuild';
 
 const watch = process.argv.includes('--watch');
+// The packaged extension: minified, and without source maps, which would double its size.
+const production = process.argv.includes('--production');
 
 await mkdir('dist', { recursive: true });
 await Promise.all([
@@ -24,7 +26,8 @@ const options = {
   // bundle leaves undefined. Give it the bundle's own file URL instead.
   banner: { js: "const __importMetaUrl = require('node:url').pathToFileURL(__filename).href;" },
   define: { 'import.meta.url': '__importMetaUrl' },
-  sourcemap: true,
+  sourcemap: !production,
+  minify: production,
   logLevel: 'info',
 };
 

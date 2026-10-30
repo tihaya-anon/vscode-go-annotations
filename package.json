@@ -1,17 +1,37 @@
 {
   "name": "go-annotations",
   "displayName": "Go Annotations",
-  "description": "Highlights Go struct tags, declaration doc comments and Kubebuilder markers, on top of gopls semantic highlighting.",
-  "version": "0.0.1",
-  "publisher": "tihaya-anon",
-  "license": "UNLICENSED",
+  "description": "GoLand-style highlighting for Go: struct tags, documented names, and Kubebuilder / controller-gen markers with hover, completion and checks.",
+  "version": "0.1.0",
+  "publisher": "chihayaanon",
+  "license": "MIT",
+  "icon": "resources/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tihaya-anon/vscode-go-annotations.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tihaya-anon/vscode-go-annotations/issues"
+  },
+  "homepage": "https://github.com/tihaya-anon/vscode-go-annotations#readme",
   "private": true,
   "type": "module",
   "engines": {
     "vscode": "^1.90.0"
   },
   "categories": [
-    "Programming Languages"
+    "Programming Languages",
+    "Linters"
+  ],
+  "keywords": [
+    "go",
+    "golang",
+    "kubebuilder",
+    "controller-gen",
+    "kubernetes",
+    "crd",
+    "struct tags",
+    "markers"
   ],
   "activationEvents": [
     "onLanguage:go"
@@ -176,16 +196,19 @@
     "watch": "node scripts/build.mjs --watch",
     "typecheck": "tsc --noEmit",
     "test": "node --test 'test/**/*.test.ts'",
-    "check": "npm run typecheck && npm run build && npm test"
-  },
-  "dependencies": {
-    "web-tree-sitter": "0.27.1"
+    "check": "npm run typecheck && npm run build && npm test",
+    "icon": "node scripts/make-icon.mjs",
+    "vscode:prepublish": "npm run check && node scripts/build.mjs --production",
+    "package": "vsce package"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/vscode": "~1.90.0",
+    "@vscode/vsce": "^4.1.0",
     "esbuild": "^0.25.0",
+    "sharp": "^0.35.5",
     "tree-sitter-go": "0.25.0",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "web-tree-sitter": "0.27.1"
   }
 }

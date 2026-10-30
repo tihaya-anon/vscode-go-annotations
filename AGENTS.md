@@ -39,6 +39,8 @@ test/bundle.test.ts   require()s dist/extension.cjs with a stub vscode module an
 scripts/build.mjs     esbuild bundle + copies both .wasm files into dist/
 scripts/make-playground.sh  clones k8s-ai-platform into playground/ (gitignored)
 scripts/capture-markers.sh  regenerates src/controller-gen-markers.json from a controller-gen
+scripts/make-icon.mjs resources/brand.svg -> resources/icon.png (npm run icon; PNG is committed)
+.vscodeignore         allow-list of what goes into the .vsix
 playground/           throwaway Kubebuilder project the F5 launch config opens
 ```
 
@@ -52,7 +54,13 @@ npm install
 scripts/make-playground.sh   # once, or to refresh the playground
 (cd playground && make controller-gen)  # optional: enables the live controller-gen tests
 npm run check                # typecheck + tests + build; run before calling a change done
+npm run package              # check, minified build, then go-annotations-<version>.vsix
 ```
+
+Publishing: Marketplace publisher `chihayaanon` (the GitHub account is `tihaya-anon`; the
+owner's MCP Config Manager extension uses the same pair). `web-tree-sitter` is a devDependency
+because esbuild bundles it, which keeps `node_modules` out of the `.vsix`; it is pinned exactly
+because its JS and `.wasm` must match. Record user-visible changes in `CHANGELOG.md`.
 
 `npm test` runs `node --test` directly on the `.ts` sources (Node strips the types), so the
 analyzer tests need no build. `test/bundle.test.ts` tests the built bundle and is skipped when

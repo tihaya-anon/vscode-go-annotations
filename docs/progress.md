@@ -119,10 +119,25 @@ named arguments now sits on a faint hueless rounded block (`goAnnotations.marker
 painted on the inline span via `textDecoration` so blocks on consecutive lines do not touch. The
 owner checked it in VS Code.
 
+## 2026-10-30 — phase 8: publishable
+
+- `package.json`: publisher `chihayaanon`, version 0.1.0, MIT, repository/bugs/homepage on
+  `github.com/tihaya-anon/vscode-go-annotations`, icon, keywords, categories (Programming
+  Languages, Linters). "Go Annotations" is not taken as a Marketplace display name (checked).
+- `LICENSE`, `CHANGELOG.md` (0.1.0 Unreleased), Marketplace-oriented README, icon (`//+` in grey strokes on
+  transparent, in the style of the MCP Config Manager icon) from
+  `resources/brand.svg`, `.vscodeignore`, production build (minified, no source maps).
+- `npm run package` gives a 171 KB `.vsix` of 8 files; the bundle tests pass on the minified build.
+
+Not done, needs the owner: the GitHub repository does not exist yet (README links and the
+Marketplace "Repository" link point at it); screenshots for the README; `vsce publish` with the
+owner's token.
+
 ## Next steps
 
-1. Possibly: value completion (bool, enums such as `scope=Cluster|Namespaced` are not in the
+1. Publish: create and push the GitHub repo, optionally add README screenshots, set the CHANGELOG
+   date, tag `v0.1.0`, `npx vsce publish`.
+2. Possibly: value completion (bool, enums such as `scope=Cluster|Namespaced` are not in the
    help, so only bool), checking string values, a prettier config.
-2. Only if large files feel slow: incremental parsing with `tree.edit()` from
+3. Only if large files feel slow: incremental parsing with `tree.edit()` from
    `TextDocumentChangeEvent.contentChanges`.
-3. Decide a licence (package.json says `UNLICENSED` for now) and whether to publish.
